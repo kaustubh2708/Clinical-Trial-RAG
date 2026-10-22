@@ -18,4 +18,3 @@ chromadb==1.5.9
 pypdf==6.21.2
 sentence-transformers==6.2.0
 httpx==0.28.1
-pytest==9.1.1

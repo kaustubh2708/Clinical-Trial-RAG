@@ -5,6 +5,7 @@ from functools import lru_cache
 from fastapi import Depends
 from langchain_chroma import Chroma
 from langchain_core.language_models import BaseChatModel
+from pydantic import SecretStr
 
 from src.config import Settings, get_settings
 from src.ingestion.indexer import ProtocolIndexer, build_vector_store
@@ -25,7 +26,8 @@ def get_vector_store(settings: Settings = Depends(get_settings)) -> Chroma:
 def _cached_llm(model: str, temperature: float, seed: int, timeout: float, api_key: str) -> BaseChatModel:
     from langchain_openai import ChatOpenAI  # imported lazily so the service starts without the OpenAI stack
 
-    return ChatOpenAI(model=model, temperature=temperature, seed=seed, timeout=timeout, max_retries=2, api_key=api_key)
+    return ChatOpenAI(model=model, temperature=temperature, seed=seed, timeout=timeout, max_retries=2,
+                      api_key=SecretStr(api_key))
 
 
 def get_llm(settings: Settings = Depends(get_settings)) -> BaseChatModel | None:

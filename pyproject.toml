@@ -1,0 +1,28 @@
+[project]
+name = "clinical-trial-rag"
+version = "0.2.0"
+description = "Grounded RAG microservice for clinical trial eligibility analysis"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = [".venv", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E501", "B008"]  # B008: FastAPI's Depends()/File() defaults are intended
+
+[tool.mypy]
+python_version = "3.11"
+packages = ["src"]
+ignore_missing_imports = true
+warn_unused_ignores = true
+check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra -m 'not slow'"
+markers = ["slow: loads the real embedding model (run with: pytest -m slow)"]
+filterwarnings = ["ignore::DeprecationWarning"]

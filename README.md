@@ -1,23 +1,26 @@
 # clinical-trial-rag
 
+[![CI](https://github.com/kaustubh2708/clinical-trial-rag/actions/workflows/ci.yml/badge.svg)](https://github.com/kaustubh2708/clinical-trial-rag/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 A FastAPI microservice that answers eligibility questions about clinical trial protocols, and pre-screens a patient summary against every criterion of a trial. Answers are grounded in verbatim, verified protocol text.
 
 Built with FastAPI, LangChain, ChromaDB, sentence-transformers and Pydantic v2.
 
 > **Decision support only.** Not a validated medical device. A qualified research coordinator makes every enrolment decision. Use public or synthetic protocols and de-identified patient text only.
 
-**New to the stack?** [`docs/STUDY_BOOK.md`](docs/STUDY_BOOK.md) is a 16-chapter guide to every concept and file in this repo, from the clinical-trials primer to the code walkthrough, evaluation and interview questions.
+**New to the stack?** [`docs/STUDY_BOOK.md`](docs/STUDY_BOOK.md) is a 17-chapter guide to every concept and file in this repo, from the clinical-trials primer to the code walkthrough, evaluation and interview questions.
 
 ## Design in one paragraph
 
 The LLM only reads text and fills a typed form. Code handles everything else:
 - trial isolation (a hard `protocol_id` filter inside the vector query)
+- hybrid retrieval (dense embeddings + BM25 keyword search, fused with Reciprocal Rank Fusion)
 - abstention (a relevance gate that skips the LLM call)
 - the fixed fallback sentence
 - verbatim quote verification, which computes `is_grounded`
 - the final eligible / not-eligible decision
 
-Every response carries an audit block (model, prompt version, chunk IDs, context hash), so any answer can be traced and replayed.
+Every response carries an audit block (model, prompt version, retrieval mode, chunk IDs, context hash), so any answer can be traced and replayed.
 
 ## Architecture
 
@@ -31,9 +34,9 @@ flowchart LR
         E[embeddings.py<br/>all-MiniLM-L6-v2, CPU] -.-> I
     end
     subgraph Query
-        Q[POST /protocols/query] --> R[retrieve top-k<br/>filter protocol_id]
+        Q[POST /protocols/query] --> R[dense + BM25 top-k<br/>fused with RRF<br/>filter protocol_id]
         C --> R
-        R --> G{relevance >= 0.30?}
+        R --> G{dense relevance >= 0.30<br/>or exact code match?}
         G -- no --> A[CRITERIA NOT SPECIFIED<br/>no LLM call]
         G -- yes --> L[LLM structured output<br/>LLMAssessment]
         L --> V[verify quotes<br/>downgrade if unverified]
@@ -134,36 +137,47 @@ Use a real trial: `python -m scripts.fetch_ctgov NCT04368728` writes its eligibi
 | --- | --- |
 | Cross-trial contamination | `{"protocol_id": ...}` filter inside Chroma, plus a post-filter check and a two-trial integration test |
 | Lost inclusion/exclusion context | One chunk per criterion, `criterion_type` metadata, a `[NCT... \| Section]` prefix on every chunk |
-| Answering out of scope | Relevance gate (`MIN_RELEVANCE_SCORE`) skips the LLM; fixed fallback string |
+| Answering out of scope | Relevance gate (`MIN_RELEVANCE_SCORE`) skips the LLM; fixed fallback string. Short code queries such as "MEN2" pass only if the code appears verbatim in the protocol |
 | Hallucinated evidence | Structured output; quotes must match the cited chunk verbatim (normalised) or the status is downgraded to `INDETERMINATE` |
 | Missed exclusion in screening | All criteria fetched by metadata, not top-k; missing verdicts become `INSUFFICIENT_INFO`; AND/ANY logic in code |
 | Prompt injection in documents | Delimiter tags stripped from document text; "data, not instructions" rule; no tools |
-| Bad uploads | Extension and `%PDF` magic-byte check, size limit (413), empty-text rejection (422), filename sanitising |
+| Bad uploads | Extension and `%PDF` magic-byte check, size limit (413), empty-text and corrupt-file rejection (422), non-UTF-8 text decoded, filename sanitising. Files are staged and kept only if ingestion succeeds, so a failed re-upload never replaces the previous version |
 | PHI in logs | Only SHA-256 fingerprints of query or patient text are logged |
 
 ## Evaluation
 
-`python -m eval.run_eval` indexes the sample protocols with the real embedding model and runs `eval/golden_set.jsonl`: 20 answerable questions and 5 out-of-scope ones. Add `--with-llm` (with `OPENAI_API_KEY` set) to also measure status accuracy, citation verification rate and grounded rate.
+`python -m eval.run_eval` indexes the sample protocols with the real embedding model and runs `eval/golden_set.jsonl`: 20 paraphrased questions, 10 exact-term queries (codes and acronyms such as "CYP3A4" or "MEN2") and 5 out-of-scope questions. It compares dense-only and hybrid retrieval and sweeps the abstention threshold; full output is in [`eval/results.md`](eval/results.md). Add `--with-llm` (with `OPENAI_API_KEY` set) to also measure status accuracy, citation verification rate and grounded rate.
 
-| Metric (top_k=4) | Value |
-| --- | --- |
-| Hit rate @4 | 1.00 |
-| MRR | 0.97 |
-| Contamination rate | 0.00 |
-| Abstention accuracy @ gate 0.30 | 1.00 |
-| False abstention rate @ gate 0.30 | 0.00 |
+| Retrieval (top_k=4) | Dense only | Hybrid (default) |
+| --- | --- | --- |
+| Hit rate @4 (30 answerable) | 0.97 | 0.97 |
+| MRR, paraphrased / exact-term | 0.97 / 0.90 | 0.97 / 0.90 |
+| Contamination rate | 0.00 | 0.00 |
+| Off-topic blocked @ gate 0.30 | 1.00 | 1.00 |
+| Answerable wrongly blocked @ gate 0.30 | 0.07 | 0.03 |
 
-The 0.30 gate was chosen from the sweep in `eval/results.md`: 0.25 let an off-topic question through, and 0.45 blocked 10% of real questions. The set is small and synthetic, so treat these numbers as a smoke test. Grow the set with real ClinicalTrials.gov trials before trusting the threshold.
+What the numbers say, honestly:
+- On this small corpus, MiniLM already ranks exact terms well, so hybrid fusion does not change MRR. It fixes one question ("liver enzyme limits", rank 3 → 1) and costs one ("age range", rank 1 → 3).
+- The gain is at the gate: dense-only abstained on short acronym queries ("MEN2 history" scored 0.291). Hybrid lets a query through when a code it names appears verbatim in the protocol, halving false abstentions without letting any off-topic question through.
+- The remaining miss is "ANC threshold": the protocol says "absolute neutrophil count", so neither ranker can match it. Abbreviation expansion is on the roadmap.
+- Hybrid is the default for robustness on long real-world criteria: MiniLM reads at most 256 tokens per chunk, while BM25 sees the full text.
+- 35 synthetic cases is a smoke test. Grow the set with real ClinicalTrials.gov trials before trusting the threshold.
 
-## Tests
+## Development and tests
 
 ```bash
-pytest            # 79 tests, offline, ~3 s: fake embeddings + fake LLM, temp Chroma per test
-pytest -m slow    # 2 tests with the real MiniLM model
+pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
+pip install -r requirements-dev.txt
+ruff check .      # lint (config in pyproject.toml)
+mypy              # type check src/
+pytest            # 97 tests, offline, ~3 s: fake embeddings + fake LLM, temp Chroma per test
+pytest -m slow    # 3 tests with the real MiniLM model
+python -m eval.run_eval --min-hit-rate 0.95   # retrieval eval; exits 1 below the floor
 ```
 
-- Unit tests cover schemas, the splitter, guardrails and chain logic.
-- Integration tests cover every endpoint, including two-trial isolation, re-index idempotency, upload errors and prompt injection.
+- Unit tests cover schemas, the splitter, guardrails, BM25/RRF and chain logic.
+- Integration tests cover every endpoint: two-trial isolation, re-index idempotency, real and corrupt PDFs, non-UTF-8 text, failed re-uploads, upload limits and prompt injection.
+- GitHub Actions (`.github/workflows/ci.yml`) runs lint, type checks, all tests, the retrieval eval with a hit-rate floor, and a Docker build on every push.
 
 ## Docker
 
@@ -188,18 +202,35 @@ src/ingestion/indexer.py   idempotent Chroma writes, criteria lookup, ingest_fil
 src/rag/embeddings.py      MiniLM singleton
 src/rag/prompt_templates.py versioned prompts, context formatting
 src/rag/guardrails.py      quote verification, sanitising, log hashing
+src/rag/hybrid.py          BM25, code/acronym detection, Reciprocal Rank Fusion
 src/rag/chain.py           query + screening pipelines, aggregation
 src/api/dependencies.py    DI providers (overridden in tests)
 src/api/routes.py          endpoints
 eval/                      golden set + harness
 scripts/fetch_ctgov.py     pull real eligibility criteria
 docs/STUDY_BOOK.md         study guide for the whole project
+.github/workflows/ci.yml   CI pipeline
+pyproject.toml             ruff, mypy and pytest configuration
 ```
+
+## Data and sources
+
+- **Sample protocols** (`data/sample_protocols/`): two synthetic protocols written for this project, with made-up IDs `NCT90000001` and `NCT90000002`. They are not real studies and contain no patient data.
+- **Evaluation set** (`eval/golden_set.jsonl`): 35 questions written for this project against the sample protocols.
+- **Real trials**: `scripts/fetch_ctgov.py` downloads public eligibility criteria from the [ClinicalTrials.gov API v2](https://clinicaltrials.gov/data-api/about-api) (no key needed). Nothing downloaded is committed.
+- **Embedding model**: [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) (Apache-2.0), downloaded from Hugging Face at install or build time.
+- **Methods**: [RAG](https://arxiv.org/abs/2005.11401) (Lewis et al., 2020), [Sentence-BERT](https://arxiv.org/abs/1908.10084) (Reimers & Gurevych, 2019), [HNSW](https://arxiv.org/abs/1603.09320) (Malkov & Yashunin), [BM25](https://nowpublishers.com/article/Details/INR-019) (Robertson & Zaragoza, 2009), [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) (Cormack et al., SIGIR 2009), and per-criterion screening as in [TrialGPT](https://doi.org/10.1038/s41467-024-53081-z) (Jin et al., Nature Communications 2024).
+
+The [study book](docs/STUDY_BOOK.md#data-and-sources) lists every source it relies on.
 
 ## Roadmap
 
-- Hybrid retrieval: BM25 + dense with reciprocal rank fusion. A cross-encoder re-ranker.
+- Abbreviation expansion for clinical acronyms (ANC → absolute neutrophil count). A cross-encoder re-ranker. Weighted RRF, tuned on a larger eval set.
 - Biomedical embeddings (e.g. `bge-small-en-v1.5` or PubMedBERT variants), compared on a larger eval set.
 - PHI de-identification before the LLM call. Azure OpenAI or a private model endpoint.
 - Async ingestion queue. Chroma server or pgvector for multiple replicas.
 - Authentication and per-study access control. An append-only audit store.
+
+## License
+
+[MIT](LICENSE)

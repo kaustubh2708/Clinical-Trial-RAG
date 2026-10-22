@@ -10,8 +10,8 @@ Pipeline:
 
 import hashlib
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import List, Sequence
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -43,7 +43,7 @@ class _Line:
 class _Section:
     title: str
     criterion_type: CriterionType
-    lines: List[_Line] = field(default_factory=list)
+    lines: list[_Line] = field(default_factory=list)
     starts_with_header: bool = False
 
     @property
@@ -72,7 +72,7 @@ def strip_context_prefix(page_content: str) -> str:
 
 
 def make_chunk_id(protocol_id: str, chunk_index: int, text: str) -> str:
-    return hashlib.sha256(f"{protocol_id}|{chunk_index}|{text}".encode("utf-8")).hexdigest()[:32]
+    return hashlib.sha256(f"{protocol_id}|{chunk_index}|{text}".encode()).hexdigest()[:32]
 
 
 def _criterion_type_for(title: str) -> CriterionType:
@@ -104,8 +104,8 @@ def _match_header(line: str) -> tuple[str, str] | None:
     return None
 
 
-def _to_lines(documents: Sequence[Document]) -> List[_Line]:
-    lines: List[_Line] = []
+def _to_lines(documents: Sequence[Document]) -> list[_Line]:
+    lines: list[_Line] = []
     for doc in documents:
         page = doc.metadata.get("page")
         page_number = page + 1 if isinstance(page, int) else None
@@ -114,8 +114,8 @@ def _to_lines(documents: Sequence[Document]) -> List[_Line]:
     return lines
 
 
-def _to_sections(lines: Sequence[_Line]) -> List[_Section]:
-    sections: List[_Section] = [_Section(title=DEFAULT_SECTION, criterion_type=CriterionType.OTHER)]
+def _to_sections(lines: Sequence[_Line]) -> list[_Section]:
+    sections: list[_Section] = [_Section(title=DEFAULT_SECTION, criterion_type=CriterionType.OTHER)]
     for line in lines:
         header = _match_header(line.text)
         if header is None:
@@ -136,10 +136,10 @@ def _to_sections(lines: Sequence[_Line]) -> List[_Section]:
     return [s for s in sections if s.has_body]
 
 
-def _split_criteria(section: _Section) -> tuple[List[tuple[str, int | None]], List[tuple[str, int | None]]]:
+def _split_criteria(section: _Section) -> tuple[list[tuple[str, int | None]], list[tuple[str, int | None]]]:
     """Split an eligibility section into (preamble_parts, criteria). Each part is (text, page)."""
-    preamble: List[_Line] = []
-    items: List[List[_Line]] = []
+    preamble: list[_Line] = []
+    items: list[list[_Line]] = []
     for line in section.lines:
         if not line.text.strip():
             continue
@@ -151,7 +151,7 @@ def _split_criteria(section: _Section) -> tuple[List[tuple[str, int | None]], Li
         else:
             preamble.append(line)
 
-    def join(parts: List[_Line]) -> tuple[str, int | None]:
+    def join(parts: list[_Line]) -> tuple[str, int | None]:
         return "\n".join(p.text.strip() for p in parts).strip(), parts[0].page
 
     preamble_parts = [join(preamble)] if preamble else []
@@ -164,10 +164,10 @@ def split_protocol(
     source_filename: str,
     chunk_size: int = 700,
     chunk_overlap: int = 120,
-) -> List[Document]:
+) -> list[Document]:
     """Turn loaded protocol pages into enriched, criterion-level chunks."""
     splitter = build_text_splitter(chunk_size, chunk_overlap)
-    pieces: List[tuple[str, _Section, int | None, bool]] = []  # (text, section, page, is_criterion)
+    pieces: list[tuple[str, _Section, int | None, bool]] = []  # (text, section, page, is_criterion)
 
     for section in _to_sections(_to_lines(documents)):
         if section.criterion_type is CriterionType.OTHER:
@@ -184,7 +184,7 @@ def split_protocol(
             body = "\n".join(line.text for line in section.lines).strip()
             pieces.extend((text, section, section.first_page, True) for text in splitter.split_text(body))
 
-    chunks: List[Document] = []
+    chunks: list[Document] = []
     for index, (text, section, page, is_criterion) in enumerate(pieces):
         metadata: dict = {
             "protocol_id": protocol_id,

@@ -1,6 +1,6 @@
 """Versioned prompts. Bump the version string whenever wording changes; it is logged with every answer."""
 
-from typing import Sequence
+from collections.abc import Sequence
 
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate

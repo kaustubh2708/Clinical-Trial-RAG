@@ -19,3 +19,5 @@ scripts
 !README.md
 Dockerfile
 .dockerignore
+.github
+docs

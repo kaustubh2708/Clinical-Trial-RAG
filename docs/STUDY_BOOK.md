@@ -52,7 +52,7 @@ Eligibility screening decides which patients may enter a trial. A false "eligibl
 | BMI | Body mass index, kg/m² | Obesity trials set a range |
 | Washout | Time since a prior drug was stopped | "No chemotherapy within 4 weeks" |
 
-**Why this problem is worth solving:** a large share of trials miss enrolment targets, and manual pre-screening of patient records against long criteria lists is slow. Tools like this assist a human research coordinator; they never make the final enrolment decision.
+**Why this problem is worth solving:** recruitment is a common failure point. In [an analysis of 2,542 surgical randomized trials registered on ClinicalTrials.gov from 2010 to 2014](https://pmc.ncbi.nlm.nih.gov/articles/PMC9857498/), only 45.9% met their enrollment target. Manual pre-screening of patient records against long criteria lists is slow. Tools like this assist a human research coordinator; they never make the final enrolment decision.
 
 **Public data you can use:** the ClinicalTrials.gov API v2 (`https://clinicaltrials.gov/api/v2/studies/{nctId}`) returns each study's eligibility text in `protocolSection.eligibilityModule.eligibilityCriteria`. The project has a script to pull it, so you never need private data.
 
@@ -117,7 +117,7 @@ An embedding model turns text into a fixed-length vector so that texts with simi
 
 The similarity formula:
 
-```latex
+```math
 \cos(\mathbf{q}, \mathbf{d}) = \frac{\mathbf{q} \cdot \mathbf{d}}{\lVert \mathbf{q} \rVert \, \lVert \mathbf{d} \rVert}
 ```
 
@@ -141,7 +141,19 @@ The similarity formula:
 
 **Hybrid search (dense + BM25)**
 
-Dense vectors capture meaning but blur exact tokens like `eGFR < 30`, `ECOG ≤ 1` or a drug name. BM25 is keyword scoring (term frequency × rarity) and nails exact tokens. Combining both, e.g. with LangChain's `EnsembleRetriever` using Reciprocal Rank Fusion, usually beats either alone. It is listed as a stretch goal in the README; know how to explain it.
+Dense vectors capture meaning but can blur exact tokens like `eGFR < 30`, `CYP3A4` or a drug name. BM25 is keyword scoring (term frequency × rarity, normalised by chunk length) and matches exact tokens. The project implements BM25 from scratch in `src/rag/hybrid.py` (about 40 lines, worth reading) with k1 = 1.5 and b = 0.75:
+
+```math
+\mathrm{BM25}(D, Q) = \sum_{q \in Q} \mathrm{IDF}(q) \cdot \frac{f(q, D)\,(k_1 + 1)}{f(q, D) + k_1 \left(1 - b + b \cdot \frac{|D|}{\mathrm{avgdl}}\right)}, \qquad \mathrm{IDF}(q) = \ln\!\left(1 + \frac{N - n_q + 0.5}{n_q + 0.5}\right)
+```
+
+Here f(q, D) is how often term q occurs in chunk D, |D| is the chunk length, avgdl the average chunk length, N the number of chunks and n\_q the number of chunks containing q. The dense and BM25 rankings are merged with Reciprocal Rank Fusion, using k = 60 as in the original paper:
+
+```math
+\mathrm{RRF}(d) = \sum_{r \in \{\text{dense},\, \text{BM25}\}} \frac{1}{k + \mathrm{rank}_r(d)}
+```
+
+RRF needs only ranks, so the two scores never have to be on the same scale. The Evaluation chapter shows what hybrid search did and did not improve here.
 
 **Self-check**
 
@@ -217,6 +229,8 @@ The project uses LangChain as a set of standard interfaces (documents, embedding
 | `langchain-chroma` | `Chroma` vector store (also replaces a deprecated community class) |
 | `langchain-openai` | `ChatOpenAI` |
 
+Heads-up: from LangChain 1.x, importing `langchain-community` prints a warning that the package [is being sunset](https://github.com/langchain-ai/langchain-community/issues/674) in favour of standalone integration packages. Only the two loaders still come from it. Replacing them with `pypdf` directly is a small, low-risk change, and a good answer to "how do you manage dependency risk?"
+
 **Concepts you must know**
 
 - **`Document`**: `page_content: str` + `metadata: dict`. Every loader returns a list of them; `PyPDFLoader` returns one per page with `metadata["page"]`.
@@ -272,6 +286,8 @@ The service then renders the three sections from it in code. You get the human-r
 | Rules in code (aggregation, abstention, fallback text) | Same input always gives the same result | **Yes** |
 | Audit log (prompt version, chunk IDs, context hash, model) | Lets you replay and explain an answer | Gives traceability |
 
+Source for the seed behaviour: OpenAI's [reproducible outputs cookbook](https://developers.openai.com/cookbook/examples/reproducible_outputs_with_the_seed_parameter) calls `seed` best-effort and says to watch `system_fingerprint`, which changes when the serving backend changes.
+
 Interview line: *"Temperature 0 makes it near-deterministic, not deterministic. I moved every decision that doesn't need the LLM into code, and I log enough to replay any answer."*
 
 **Screening prompt**
@@ -299,7 +315,7 @@ If the model skips a criterion, code fills it in as `INSUFFICIENT_INFO`. A skipp
 
 1. **Input validation (Pydantic)**: NCT regex, query length 5–1000, `top_k` 1–10. Bad input never reaches retrieval.
 2. **Trial isolation**: the `{"protocol_id": ...}` filter is applied inside Chroma. An integration test indexes two protocols and asserts no citation ever carries the other ID.
-3. **Relevance gate (abstain before the LLM)**: if no retrieved chunk scores at least `MIN_RELEVANCE_SCORE`, return the CRITERIA NOT SPECIFIED response at once. No LLM call means no cost and no chance of a made-up answer.
+3. **Relevance gate (abstain before the LLM)**: if the best dense match scores below `MIN_RELEVANCE_SCORE` (0.30), return the CRITERIA NOT SPECIFIED response at once. One exception in hybrid mode: a query that names a code or acronym (contains a digit or is all caps, like "MEN2") passes if that code appears verbatim in the protocol. Trial IDs never count, because every chunk prefix contains one. No LLM call means no cost and no chance of a made-up answer.
 4. **Delimited, untrusted context**: chunks are wrapped in tags, and any tag-like text inside a chunk (`</chunk>`, `<protocol_context>`) is removed so a document can't close the block early. The system prompt says chunk text is data.
 5. **Structured output**: the reply must validate against `LLMAssessment`.
 6. **Citation verification**: for each `EvidenceItem`, check that `chunk_id` was one of the chunks actually given, and that the normalised quote is a substring of that chunk's normalised text. Normalisation lowercases, folds Unicode (NFKC), unifies quote and dash characters, and collapses whitespace. So a curly quote or a line break doesn't fail a true match.
@@ -348,13 +364,15 @@ FastAPI turns typed Python functions into an HTTP API. Pydantic validates every 
 - **`def` vs `async def`**: embedding and Chroma calls are CPU-bound and blocking. Declaring those endpoints with plain `def` makes FastAPI run them in its threadpool, so the event loop stays free for `/health`. An `async def` that calls blocking code freezes the whole server.
 - **Lifespan**: `@asynccontextmanager async def lifespan(app)` creates data directories at startup. `/ready` reports whether the model and store load.
 - **Middleware**: adds an `X-Request-ID` header and logs method, path, status and latency for every request.
-- **Exception mapping**: `UnsupportedFileTypeError` → 415, `EmptyDocumentError` → 422, protocol not indexed → 404, file too large → 413, LLM failure → 502.
+- **Exception mapping**: `UnsupportedFileTypeError` → 415, `EmptyDocumentError` and `DocumentParseError` → 422, protocol not indexed → 404, file too large → 413, no LLM configured → 503, LLM failure → 502.
 
 **Upload hardening**
 
 - Only `.pdf` and `.txt`, checked by extension and, for PDFs, by the `%PDF` magic bytes.
-- The file is read in pieces with a running size count against `MAX_UPLOAD_MB`.
+- The file is streamed to a hidden staging file in pieces, with a running size count against `MAX_UPLOAD_MB`.
+- The staging file is ingested first and moved to its final name only if ingestion succeeds. A failed upload leaves nothing behind, and a failed re-upload never replaces the previous version's file or chunks.
 - The saved filename is rebuilt from `protocol_id` + a safe version of the original name (`Path(name).name`, then only `[A-Za-z0-9._-]` kept). This blocks path traversal like `../../etc/passwd`.
+- Known gap: FastAPI receives the whole multipart body before the handler runs, so the size cap protects the index, not the server's disk. In production a reverse proxy enforces the limit.
 
 **Self-check**
 
@@ -364,7 +382,7 @@ FastAPI turns typed Python functions into an HTTP API. Pydantic validates every 
 
 ## Code walkthrough
 
-The codebase is 11 source files in `src/` plus `app.py`, about 1,300 lines. Read them in the order below: each file depends only on the ones before it. Run `pytest` after each file to watch the tests that cover it.
+The codebase is 12 source files in `src/` plus `app.py`, about 1,500 lines. Read them in the order below: each file depends only on the ones before it. Run `pytest` after each file to watch the tests that cover it.
 
 ```mermaid
 flowchart LR
@@ -376,9 +394,9 @@ flowchart LR
         E[embeddings.py<br/>all-MiniLM-L6-v2, CPU] -.-> I
     end
     subgraph Query
-        Q[POST /protocols/query] --> R[retrieve top-k<br/>filter protocol_id]
+        Q[POST /protocols/query] --> R[dense + BM25 top-k<br/>fused with RRF<br/>filter protocol_id]
         C --> R
-        R --> G{relevance >= 0.30?}
+        R --> G{dense relevance >= 0.30<br/>or exact code match?}
         G -- no --> A[CRITERIA NOT SPECIFIED<br/>no LLM call]
         G -- yes --> L[LLM structured output<br/>LLMAssessment]
         L --> V[verify quotes<br/>downgrade if unverified]
@@ -410,7 +428,7 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 
 **3. `src/ingestion/parser.py` — file to Documents**
 
-`load_document(path)` picks `PyPDFLoader` (one Document per page, with `metadata["page"]`) or `TextLoader` (with encoding auto-detection). It drops blank pages. It raises `UnsupportedFileTypeError` for other extensions, and `EmptyDocumentError` when there is no text, which is typical of a scanned PDF.
+`load_document(path)` picks `PyPDFLoader` (one Document per page, with `metadata["page"]`) or `TextLoader`. Text files are tried as UTF-8, then cp1252, then latin-1, which maps every byte and so never fails. Any parser failure (corrupt or encrypted PDF) becomes `DocumentParseError` (422) instead of a 500. It drops blank pages. It raises `UnsupportedFileTypeError` for other extensions, and `EmptyDocumentError` when there is no text, which is typical of a scanned PDF.
 
 **4. `src/ingestion/splitter.py` — the most important file**
 
@@ -441,6 +459,13 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 - `verify_quote(quote, source)` requires at least 8 characters. It allows `...` elisions, as long as the fragments appear in order.
 - `hash_for_log()` returns the first 16 hex characters of SHA-256.
 
+**7b. `src/rag/hybrid.py` — keyword search and fusion, pure functions**
+
+- `tokenize()` lowercases, drops a short stopword list and strips plural "s" ("limits" → "limit").
+- `BM25` is Okapi BM25 over one protocol's chunks, built per query. A protocol has tens to hundreds of chunks, so this takes milliseconds and can never go stale after a re-index.
+- `code_terms()` finds codes and acronyms in the query: tokens with a digit (CYP3A4) or all caps (ALK). It ignores pure numbers and NCT IDs.
+- `reciprocal_rank_fusion()` merges ranked ID lists: each item scores the sum of 1 / (k + rank).
+
 **8. `src/rag/prompt_templates.py`**: `QA_PROMPT` and `SCREENING_PROMPT` (`ChatPromptTemplate`, with shared rules), version constants `qa-v1` and `screen-v1`, the exact `INSUFFICIENT_CONTEXT_RESPONSE` string, and `format_context()` / `format_criteria()`, which wrap each chunk in an attributed tag.
 
 **9. `src/rag/chain.py` — the pipeline**
@@ -448,7 +473,10 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 `EligibilityRAGChain.query()`, step by step:
 
 1. Return 404 (`ProtocolNotFoundError`) if nothing is indexed for the ID.
-2. `retrieve()`: `similarity_search_with_score(filter={"protocol_id": ...})`, relevance = 1 − distance. Drop any chunk from another protocol (defence in depth). Keep chunks with relevance at least `MIN_RELEVANCE_SCORE`.
+2. `retrieve()` returns a `RetrievalResult` (chunks, best dense relevance, mode, code match):
+   1. Dense search with `filter={"protocol_id": ...}`, `HYBRID_CANDIDATES` (20) results; relevance = 1 − cosine distance. Any chunk from another protocol is dropped (defence in depth).
+   2. Gate: continue only if the best relevance is at least `MIN_RELEVANCE_SCORE`, or (hybrid) the query names a code found verbatim in the protocol.
+   3. Dense mode keeps chunks above the threshold. Hybrid mode builds BM25 over the protocol's chunks and fuses both rankings with RRF, then takes `top_k`.
 3. No chunks left → return the fixed abstention with `llm_called=False`.
 4. `_invoke_structured(QA_PROMPT, LLMAssessment, ...)` runs `prompt | llm.with_structured_output(schema)`. Any exception is wrapped as `LLMInvocationError` (502). With no LLM configured it raises `LLMNotConfiguredError` (503).
 5. For each evidence item: check the chunk ID was actually retrieved and verify the quote. Build a `CitationSource`.
@@ -467,8 +495,10 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 
 - `data/sample_protocols/`: two synthetic protocols, NCT90000001 (type 2 diabetes: 7 inclusion and 9 exclusion criteria) and NCT90000002 (lung cancer: 6 and 7).
 - `scripts/fetch_ctgov.py`: pulls real eligibility text. NCT04368728 splits into 6 inclusion and 30 exclusion criteria.
-- `eval/`: `golden_set.jsonl` (25 cases), `run_eval.py`, `results.md`.
-- `tests/`: 79 offline tests (about 3 s) plus 2 `slow` tests with the real model.
+- `eval/`: `golden_set.jsonl` (35 cases), `run_eval.py`, `results.md`.
+- `tests/`: 97 offline tests (about 3 s) plus 3 `slow` tests with the real model.
+- `pyproject.toml`: ruff, mypy and pytest settings. `requirements-dev.txt` adds pytest, ruff and mypy on top of the runtime `requirements.txt`.
+- `.github/workflows/ci.yml`: lint, type check, tests, retrieval eval with a 0.95 hit-rate floor, Docker build.
 - `Dockerfile`: verified to build and run healthy as uid 10001 `gskapp`. The image is about 2.9 GB, mostly CPU torch (773 MB) and chromadb's dependencies.
 
 **Self-check**
@@ -479,17 +509,19 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 
 ## Testing strategy
 
-The whole test suite runs offline in seconds: no OpenAI key, no network, no 90 MB model download. Fakes stand in for both the embedding model and the LLM.
+The main suite (97 tests) runs offline in about 3 seconds: no OpenAI key, no network, no 90 MB model download. Fakes stand in for both the embedding model and the LLM. Three more tests, marked `slow`, use the real MiniLM model. Test settings live in `pyproject.toml`.
 
 **The test pyramid here**
 
 | Layer | File | What it proves |
 | --- | --- | --- |
 | Unit | `tests/unit/test_schemas.py` | NCT regex rejects `NCT123`, `nct12345678` and `NCT123456789`; length and `top_k` bounds; unknown fields rejected |
-| Unit | `tests/unit/test_splitter.py` | One chunk per criterion; `criterion_type` correct; context prefix present; metadata complete; IDs stable across runs; long prose split under `chunk_size` |
-| Unit | `tests/unit/test_guardrails.py` | Quote normalisation (curly quotes, line breaks); unknown `chunk_id` rejected; tag stripping |
-| Unit | `tests/unit/test_chain.py` | Abstains below the threshold without calling the LLM; downgrades to INDETERMINATE when a quote fails; screening aggregation rules; a missing verdict becomes INSUFFICIENT\_INFO |
-| Integration | `tests/integration/test_endpoints.py` | `/health`; upload → index → query end to end through HTTP; re-index doesn't duplicate; 415 / 413 / 422 / 404 paths; two-trial isolation; `/screen` |
+| Unit | `tests/unit/test_splitter.py` | One chunk per criterion; `criterion_type` correct; context prefix present; metadata complete; IDs stable across runs; long prose split under `chunk_size`; PDF page numbers kept |
+| Unit | `tests/unit/test_guardrails.py` | Quote normalisation (curly quotes, line breaks); paraphrases and out-of-order fragments rejected; tag stripping |
+| Unit | `tests/unit/test_hybrid.py` | Tokenizer and plural stemming; code/acronym detection (numbers and NCT IDs ignored); BM25 ranks exact terms first and prefers rare terms; RRF arithmetic |
+| Unit | `tests/unit/test_chain.py` | Abstains below the threshold without calling the LLM; downgrades when a quote fails; screening aggregation rules; missing verdicts; hybrid puts a keyword match first; the code-match gate works only in hybrid mode; off-topic still abstains |
+| Integration | `tests/integration/test_endpoints.py` | Every endpoint over HTTP; re-index doesn't duplicate; two-trial isolation; a real generated PDF; corrupt PDF → 422 with no file left; cp1252 text decoded; a failed re-upload keeps the previous version; 415 / 413 / 422 / 404 / 503 paths; prompt injection |
+| Slow | `tests/integration/test_real_embeddings.py` | With real MiniLM: the kidney question finds the eGFR criterion; off-topic abstains; "MEN2 history" scores under the gate but passes by code match |
 
 **How the fakes work**
 
@@ -522,9 +554,9 @@ Tests prove the code does what it's written to do. Evaluation measures how well 
 
 **Files**
 
-- `eval/golden_set.jsonl`: one JSON object per line: `id`, `protocol_id`, `question`, `kind` (`lookup` or `abstain`), `expected_keywords` (text that must appear in a correct retrieved chunk), `expected_status` (optional).
-- `eval/run_eval.py`: indexes the two synthetic sample protocols in `data/sample_protocols/` into a temporary store using the **real** MiniLM model, runs every case, and writes `eval/results.md`.
-- Retrieval metrics run offline. The LLM metrics run only when `OPENAI_API_KEY` is set.
+- `eval/golden_set.jsonl`: 35 cases, one JSON object per line: `id`, `protocol_id`, `question`, `kind` (`lookup` = paraphrased, `exact` = names a code or acronym, `abstain` = out of scope), `expected_keywords` (text that must appear in a correct retrieved chunk), `expected_status` (optional).
+- `eval/run_eval.py`: indexes the two synthetic sample protocols in `data/sample_protocols/` into a temporary store using the **real** MiniLM model, runs every case in both dense and hybrid mode, and writes `eval/results.md`. `--min-hit-rate` makes it exit with an error below a floor, which is how CI uses it.
+- Retrieval metrics run offline. The LLM metrics (`--with-llm`) run only when `OPENAI_API_KEY` is set.
 
 **Metrics and what each one catches**
 
@@ -541,7 +573,7 @@ Tests prove the code does what it's written to do. Evaluation measures how well 
 
 MRR formula, where Q is the set of questions:
 
-```latex
+```math
 \mathrm{MRR} = \frac{1}{|Q|} \sum_{i=1}^{|Q|} \frac{1}{\mathrm{rank}_i}
 ```
 
@@ -549,17 +581,24 @@ MRR formula, where Q is the set of questions:
 
 Raising the threshold raises abstention accuracy but also the false-abstention rate. Run the eval at several values (e.g. 0.15, 0.25, 0.35) and pick the one that keeps false abstentions low while blocking clearly off-topic questions. That is a data-driven answer to "how did you choose the threshold?". In this domain, wrongly abstaining is safer than wrongly answering.
 
-**Your current results** (real MiniLM, 20 answerable + 5 off-topic questions, top\_k=4): hit rate@4 = 1.00, MRR = 0.97, contamination = 0.00. The only correct chunk not ranked first was "What liver enzyme limits apply?" (rank 3): "liver enzyme" never appears in the text "ALT or AST". That is a good example of where hybrid search or a biomedical embedding model would help. The threshold sweep that set the 0.30 default:
+**Your current results** (real MiniLM, top\_k=4, 20 paraphrased + 10 exact-term + 5 off-topic questions; full output in `eval/results.md`):
 
-| MIN\_RELEVANCE\_SCORE | Off-topic blocked | Answerable wrongly blocked |
+| Metric | Dense only | Hybrid (default) |
 | --- | --- | --- |
-| 0.15 | 0.60 | 0.00 |
-| 0.25 | 0.80 | 0.00 |
-| 0.30 | 1.00 | 0.00 |
-| 0.35 | 1.00 | 0.00 |
-| 0.45 | 1.00 | 0.10 |
+| Hit rate @4 (30 answerable) | 0.97 | 0.97 |
+| MRR, paraphrased / exact-term | 0.97 / 0.90 | 0.97 / 0.90 |
+| Contamination rate | 0.00 | 0.00 |
+| Off-topic blocked @ gate 0.30 | 1.00 | 1.00 |
+| Answerable wrongly blocked @ gate 0.30 | 0.07 | 0.03 |
 
-Be honest about it in interviews: 25 synthetic cases is a smoke test, and the lowest real-question score (0.356) sits close to the threshold. Growing the set is your first post-week-1 task.
+What the numbers say:
+
+- **Ranking: no net gain.** Hybrid fixed "What liver enzyme limits apply?" (rank 3 → 1: BM25 matched "limit" in "upper limit of normal") but cost "What is the age range?" (rank 1 → 3: "participants" appears in many non-criteria chunks, and the criterion says "aged", not "age"). MiniLM already ranks 9 of the 10 exact-term queries first on this small corpus.
+- **The gate: a real gain.** Dense-only wrongly abstained on short acronym queries ("MEN2 history" scored 0.291). The code-match rule halved false abstentions (7% → 3%) and still blocked every off-topic question.
+- **The remaining miss:** "ANC threshold". The protocol says "absolute neutrophil count", so neither ranker can match it. Abbreviation expansion is the fix.
+- **Why hybrid is still the default:** MiniLM reads at most 256 tokens per chunk; BM25 sees the full text. Real criteria are often longer than the samples.
+
+Be honest about this in interviews: hybrid search did not improve ranking here; its measurable win was at the gate, and you found that by adding a new question category. 35 synthetic cases is a smoke test, and the lowest real-question score (0.356) sits close to the threshold. Growing the set with real trials is your first post-week-1 task. CI runs this eval on every push and fails the build if the hybrid hit rate drops below 0.95 (`--min-hit-rate 0.95`).
 
 **Growing it after week 1**
 
@@ -614,7 +653,7 @@ The `-v` volume keeps the Chroma index and uploads when the container is replace
 - **Secrets**: a secrets manager (Vault, AWS Secrets Manager, Azure Key Vault), not `.env` files.
 - **LLM gateway**: Azure OpenAI or a private model endpoint inside the company network, with rate limits and cost tracking.
 - **Observability**: OpenTelemetry traces per stage (retrieve, LLM, verify), with token and latency metrics on a dashboard.
-- **CI/CD**: GitHub Actions runs lint, type checks, tests and the retrieval eval, then builds and scans the image (Trivy).
+- **CI/CD**: already in the repo: `.github/workflows/ci.yml` runs ruff, mypy, all tests (including the real-model ones), the retrieval eval with a 0.95 hit-rate floor, and a Docker build on every push. Production would add an image vulnerability scan (e.g. Trivy) and a push to a registry.
 
 **Self-check**
 
@@ -688,7 +727,7 @@ Practise these out loud. Aim for two minutes each: answer first, then the reason
 9. **How do you test without an API key?** Dependency overrides inject fake embeddings and a fake structured-output LLM, with a temp Chroma directory per test.
 10. **What happens when a protocol is amended?** Delete all chunks for that `protocol_id`, then re-index. Chunk IDs are content hashes, so re-uploading the same file is idempotent.
 11. **How would you scale this?** Chroma server or pgvector for many replicas, an ingestion queue, an LLM gateway with rate limits, OpenTelemetry traces, and caching of repeated queries by context hash.
-12. **How would you improve retrieval?** Hybrid BM25 + dense with reciprocal rank fusion, a biomedical embedding model, and a cross-encoder re-ranker, each measured against the eval set.
+12. **How would you improve retrieval?** I added hybrid BM25 + dense search with RRF and measured it. It did not change MRR on my eval set: it fixed one vocabulary-mismatch question and hurt one paraphrase. But adding a category of short acronym queries showed the dense-only gate wrongly abstained on 7% of answerable questions. A code-match rule cut that to 3% with no off-topic leaks. Next: abbreviation expansion, a cross-encoder re-ranker and a biomedical embedding model, each judged on a larger eval set.
 
 **Safety and domain**
 
@@ -701,6 +740,46 @@ Practise these out loud. Aim for two minutes each: answer first, then the reason
 - How do your teams validate LLM features under GxP today?
 - Which parts of trial operations (feasibility, site selection, pre-screening) are you applying ML to?
 - How do you evaluate retrieval quality on internal documents?
+
+## Data and sources
+
+Every dataset in the repo is synthetic or public. No real patient data is used anywhere.
+
+**Data used by the project**
+
+| Data | Origin | Notes |
+| --- | --- | --- |
+| `data/sample_protocols/NCT90000001_t2d_protocol.txt`, `NCT90000002_nsclc_protocol.txt` | Written for this project | Synthetic; the IDs and sponsors are made up and no such studies exist |
+| `eval/golden_set.jsonl` (35 questions) | Written for this project | Questions and expected answers about the two synthetic protocols |
+| Real trial eligibility text | [ClinicalTrials.gov API v2](https://clinicaltrials.gov/data-api/about-api), via `scripts/fetch_ctgov.py` | Public, no key needed; downloaded on demand, never committed. Tested on [NCT04368728](https://clinicaltrials.gov/study/NCT04368728) |
+| Embedding model | [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) on Hugging Face | Apache-2.0; 384 dimensions and a 256-token input limit, both checked in code |
+| Patient summaries in tests | Written for this project | Fictional, de-identified style |
+
+**Papers behind the methods**
+
+- RAG: Lewis et al., [Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](https://arxiv.org/abs/2005.11401) (2020).
+- Sentence embeddings: Reimers & Gurevych, [Sentence-BERT](https://arxiv.org/abs/1908.10084) (EMNLP 2019).
+- Vector index: Malkov & Yashunin, [HNSW](https://arxiv.org/abs/1603.09320) (2016; revised 2018).
+- Keyword ranking: Robertson & Zaragoza, [The Probabilistic Relevance Framework: BM25 and Beyond](https://nowpublishers.com/article/Details/INR-019) (2009).
+- Fusion: Cormack, Clarke & Büttcher, [Reciprocal Rank Fusion](https://plg.uwaterloo.ca/~gvcormac/cormacksigir09-rrf.pdf) (SIGIR 2009); the source of k = 60.
+- Per-criterion trial matching (TrialGPT): Jin et al., [Matching patients to clinical trials with large language models](https://doi.org/10.1038/s41467-024-53081-z) (Nature Communications, 2024).
+- RAG evaluation: Es et al., [RAGAS](https://arxiv.org/abs/2309.15217) (EACL 2024 demo).
+
+**Facts cited in this book**
+
+- Enrollment shortfall (45.9% of surgical trials met target): [analysis of 2,542 trials registered on ClinicalTrials.gov](https://pmc.ncbi.nlm.nih.gov/articles/PMC9857498/).
+- ECOG performance status grades 0–5: [LOINC 89247-1](https://loinc.org/89247-1).
+- OpenAI `seed` is best-effort: [OpenAI cookbook](https://developers.openai.com/cookbook/examples/reproducible_outputs_with_the_seed_parameter).
+- Chroma metadata filters (`$and`, `$in`): [Chroma docs](https://docs.trychroma.com/docs/querying-collections/metadata-filtering); `$in` also checked against the installed version.
+- 21 CFR Part 11: [eCFR text](https://www.ecfr.gov/current/title-21/chapter-I/subchapter-A/part-11).
+- HIPAA business associates and BAAs: [HHS guidance](https://www.hhs.gov/hipaa/for-professionals/privacy/guidance/business-associates/index.html).
+- `langchain-community` sunset notice: [langchain-community issue 674](https://github.com/langchain-ai/langchain-community/issues/674).
+
+**Not sourced, and how to treat it**
+
+- The "Clinical measures" table gives typical thresholds. Real cutoffs vary by protocol, so always quote the protocol, never the table.
+- Library behaviour (FastAPI, Pydantic, LangChain, pytest) is described from the versions pinned in `requirements.txt` and was checked by running the code and tests, not against external docs.
+- All metrics in the Evaluation chapter come from running `eval/run_eval.py` on the synthetic data above.
 
 ## Glossary
 

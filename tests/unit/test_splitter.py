@@ -28,7 +28,7 @@ def test_one_chunk_per_criterion_with_correct_labels():
 def test_context_prefix_and_metadata_on_every_chunk():
     chunks = split_protocol(load_document(T2D_PROTOCOL), T2D_ID, T2D_PROTOCOL.name)
     for chunk in chunks:
-        assert REQUIRED_METADATA <= chunk.metadata.keys()
+        assert chunk.metadata.keys() >= REQUIRED_METADATA
         assert chunk.metadata["protocol_id"] == T2D_ID
         assert chunk.metadata["source_document"] == T2D_PROTOCOL.name
         assert chunk.page_content.startswith(f"[{T2D_ID} | {chunk.metadata['section']}]\n")
