@@ -5,7 +5,7 @@ import pytest
 from src.api.dependencies import get_llm
 from src.rag.prompt_templates import INSUFFICIENT_CONTEXT_RESPONSE
 from src.schemas import CriterionVerdictValue
-from tests.conftest import NSCLC_ID, NSCLC_PROTOCOL, T2D_ID, T2D_PROTOCOL, upload
+from tests.conftest import NSCLC_ID, NSCLC_PROTOCOL, T2D_ID, T2D_PROTOCOL, make_pdf, upload
 
 QUERY_URL = "/api/v1/protocols/query"
 SCREEN_URL = "/api/v1/protocols/screen"
@@ -154,3 +154,37 @@ def test_list_and_delete_protocols(client):
     assert deleted.status_code == 200 and deleted.json()["chunks_deleted"] == 21
     assert client.get("/api/v1/protocols").json() == []
     assert client.delete(f"/api/v1/protocols/{T2D_ID}").status_code == 404
+
+
+def test_real_pdf_is_indexed_with_page_numbers(client, vector_store):
+    pdf = make_pdf(["Inclusion Criteria:", "1. Age 18 years or older", "Exclusion Criteria:", "1. Pregnancy"])
+    response = _post_file(client, "protocol.pdf", pdf, protocol_id="NCT11111111")
+    assert response.status_code == 201, response.text
+    assert response.json()["criteria_indexed"] == 2
+    metadatas = vector_store.get(where={"protocol_id": "NCT11111111"}, include=["metadatas"])["metadatas"]
+    assert {m["page"] for m in metadatas} == {1}
+
+
+def test_corrupt_pdf_returns_422_and_leaves_no_file(client, tmp_path):
+    response = _post_file(client, "broken.pdf", b"%PDF-1.4 this is not really a pdf")
+    assert response.status_code == 422
+    assert "Could not read" in response.json()["detail"]
+    assert list((tmp_path / "uploads").iterdir()) == []
+
+
+def test_non_utf8_text_is_decoded(client, vector_store):
+    latin1 = "Exclusion Criteria:\n1. Café au lait spots (neurofibromatosis)\n".encode("cp1252")
+    assert _post_file(client, "latin.txt", latin1).status_code == 201
+    documents = vector_store.get(where={"protocol_id": T2D_ID}, include=["documents"])["documents"]
+    assert any("Café" in text for text in documents)
+
+
+def test_failed_reindex_keeps_previous_version(client, tmp_path):
+    assert upload(client, T2D_PROTOCOL, T2D_ID).status_code == 201
+    saved = tmp_path / "uploads" / f"{T2D_ID}__{T2D_PROTOCOL.name}"
+    original = saved.read_bytes()
+    broken = _post_file(client, T2D_PROTOCOL.name, b"   \n  ")  # same name, no text
+    assert broken.status_code == 422
+    assert saved.read_bytes() == original  # file on disk untouched
+    assert [p.name for p in (tmp_path / "uploads").iterdir()] == [saved.name]  # no staged leftovers
+    assert client.get("/api/v1/protocols").json()[0]["chunk_count"] == 21  # chunks untouched

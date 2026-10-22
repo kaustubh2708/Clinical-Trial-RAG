@@ -4,7 +4,6 @@ import logging
 import re
 import uuid
 from pathlib import Path as FilePath
-from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, UploadFile, status
 from fastapi.responses import JSONResponse
@@ -40,11 +39,12 @@ def sanitize_filename(filename: str) -> str:
     return name[:120] or "protocol"
 
 
-def _save_upload(file: UploadFile, destination: FilePath, max_bytes: int) -> None:
+def _stage_upload(file: UploadFile, upload_dir: FilePath, safe_name: str, max_bytes: int) -> FilePath:
+    """Stream the upload to a hidden temp file (same suffix, same directory) and enforce the size limit."""
+    staged = upload_dir / f".{uuid.uuid4().hex}__{safe_name}"
     size = 0
-    tmp_path = destination.with_suffix(destination.suffix + f".{uuid.uuid4().hex}.part")
     try:
-        with tmp_path.open("wb") as out:
+        with staged.open("wb") as out:
             while chunk := file.file.read(_READ_CHUNK_BYTES):
                 size += len(chunk)
                 if size > max_bytes:
@@ -52,9 +52,10 @@ def _save_upload(file: UploadFile, destination: FilePath, max_bytes: int) -> Non
                 out.write(chunk)
         if size == 0:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Uploaded file is empty.")
-        tmp_path.replace(destination)
-    finally:
-        tmp_path.unlink(missing_ok=True)
+    except BaseException:
+        staged.unlink(missing_ok=True)
+        raise
+    return staged
 
 
 @health_router.get("/health")
@@ -93,10 +94,14 @@ def index_protocol(
 
     upload_dir = FilePath(settings.UPLOAD_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
-    destination = upload_dir / f"{protocol_id}__{safe_name}"
-    _save_upload(file, destination, settings.MAX_UPLOAD_MB * 2**20)
-
-    return ingest_file(destination, protocol_id, safe_name, indexer, settings.CHUNK_SIZE, settings.CHUNK_OVERLAP)
+    staged = _stage_upload(file, upload_dir, safe_name, settings.MAX_UPLOAD_MB * 2**20)
+    try:
+        response = ingest_file(staged, protocol_id, safe_name, indexer, settings.CHUNK_SIZE, settings.CHUNK_OVERLAP)
+    except BaseException:
+        staged.unlink(missing_ok=True)  # a failed upload never replaces the previous version's file
+        raise
+    staged.replace(upload_dir / f"{protocol_id}__{safe_name}")
+    return response
 
 
 @router.post("/protocols/query", response_model=EligibilityQueryResponse)
@@ -115,8 +120,8 @@ def screen_patient(
     return chain.screen(request)
 
 
-@router.get("/protocols", response_model=List[ProtocolSummary])
-def list_protocols(indexer: ProtocolIndexer = Depends(get_indexer)) -> List[ProtocolSummary]:
+@router.get("/protocols", response_model=list[ProtocolSummary])
+def list_protocols(indexer: ProtocolIndexer = Depends(get_indexer)) -> list[ProtocolSummary]:
     return indexer.list_protocols()
 
 

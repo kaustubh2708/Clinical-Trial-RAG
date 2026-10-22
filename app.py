@@ -11,7 +11,7 @@ from fastapi.responses import JSONResponse
 from src import __version__
 from src.api.routes import health_router, router
 from src.config import get_settings
-from src.ingestion.parser import EmptyDocumentError, UnsupportedFileTypeError
+from src.ingestion.parser import DocumentParseError, EmptyDocumentError, UnsupportedFileTypeError
 from src.rag.chain import LLMInvocationError, LLMNotConfiguredError, NoCriteriaError, ProtocolNotFoundError
 
 logger = logging.getLogger("clinical_trial_rag")
@@ -19,6 +19,7 @@ logger = logging.getLogger("clinical_trial_rag")
 _ERROR_STATUS = {
     UnsupportedFileTypeError: 415,
     EmptyDocumentError: 422,
+    DocumentParseError: 422,
     ProtocolNotFoundError: 404,
     NoCriteriaError: 422,
     LLMNotConfiguredError: 503,

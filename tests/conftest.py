@@ -2,8 +2,8 @@
 
 import re
 import uuid
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Dict, List, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
@@ -42,14 +42,14 @@ class FakeStructuredLLM:
 
     def __init__(
         self,
-        qa_responder: Callable[[List[Tuple[str, str]]], LLMAssessment] | None = None,
-        screening_rules: Dict[str, Tuple[CriterionVerdictValue, str]] | None = None,
+        qa_responder: Callable[[list[tuple[str, str]]], LLMAssessment] | None = None,
+        screening_rules: dict[str, tuple[CriterionVerdictValue, str]] | None = None,
         error: Exception | None = None,
     ):
         self.qa_responder = qa_responder
         self.screening_rules = screening_rules or {}
         self.error = error
-        self.prompts: List[str] = []
+        self.prompts: list[str] = []
 
     @property
     def call_count(self) -> int:
@@ -133,6 +133,28 @@ def client(settings, vector_store, fake_llm):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+def make_pdf(lines: list[str]) -> bytes:
+    """Build a minimal, valid one-page PDF with the given text lines (no PDF library needed)."""
+    escaped = [line.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)") for line in lines]
+    content = "BT /F1 11 Tf 50 750 Td 14 TL " + " ".join(f"({line}) Tj T*" for line in escaped) + " ET"
+    objects = [
+        "<< /Type /Catalog /Pages 2 0 R >>",
+        "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R "
+        "/Resources << /Font << /F1 5 0 R >> >> >>",
+        f"<< /Length {len(content)} >>\nstream\n{content}\nendstream",
+        "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+    ]
+    out, offsets = "%PDF-1.4\n", []
+    for number, body in enumerate(objects, start=1):
+        offsets.append(len(out))
+        out += f"{number} 0 obj\n{body}\nendobj\n"
+    xref = len(out)
+    out += f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n" + "".join(f"{o:010d} 00000 n \n" for o in offsets)
+    out += f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"
+    return out.encode("latin-1")
 
 
 def upload(client: TestClient, path: Path, protocol_id: str, filename: str | None = None):
