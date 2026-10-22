@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -30,8 +31,12 @@ class Settings(BaseSettings):
 
     # Retrieval
     RETRIEVAL_TOP_K: int = Field(default=4, ge=1, le=10)
-    # Chunks scoring below this relevance (0..1, cosine-based) are discarded.
-    # If none survive, the service abstains without calling the LLM.
+    # "hybrid" = dense + BM25 fused with Reciprocal Rank Fusion; "dense" = embeddings only.
+    RETRIEVAL_MODE: Literal["hybrid", "dense"] = "hybrid"
+    HYBRID_CANDIDATES: int = Field(default=20, ge=1, le=200)  # candidates per ranker before fusion
+    RRF_K: int = Field(default=60, ge=1)
+    # Relevance gate (cosine relevance = 1 - cosine distance). If the best dense match scores below this,
+    # the service abstains without calling the LLM. In dense mode, weaker chunks are also dropped.
     MIN_RELEVANCE_SCORE: float = Field(default=0.30, ge=-1.0, le=1.0)
     # Upper bound on criteria sent to the LLM in one screening call.
     MAX_SCREENING_CRITERIA: int = Field(default=80, ge=1)

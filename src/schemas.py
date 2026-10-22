@@ -1,8 +1,7 @@
 """Request/response models for the API, plus the structured-output schemas the LLM must fill."""
 
-from datetime import datetime, timezone
-from enum import Enum
-from typing import List
+from datetime import UTC, datetime
+from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -11,20 +10,20 @@ from src.config import get_settings
 NCT_ID_PATTERN = r"^NCT\d{8}$"
 
 
-class EligibilityStatus(str, Enum):
+class EligibilityStatus(StrEnum):
     ELIGIBLE = "ELIGIBLE"
     NOT_ELIGIBLE = "NOT_ELIGIBLE"
     INDETERMINATE = "INDETERMINATE"
     CRITERIA_NOT_SPECIFIED = "CRITERIA_NOT_SPECIFIED"
 
 
-class CriterionType(str, Enum):
+class CriterionType(StrEnum):
     INCLUSION = "inclusion"
     EXCLUSION = "exclusion"
     OTHER = "other"
 
 
-class CriterionVerdictValue(str, Enum):
+class CriterionVerdictValue(StrEnum):
     MET = "MET"
     NOT_MET = "NOT_MET"
     INSUFFICIENT_INFO = "INSUFFICIENT_INFO"
@@ -86,10 +85,11 @@ class AuditInfo(BaseModel):
 
     model: str
     prompt_version: str
-    retrieved_chunk_ids: List[str]
+    retrieval_mode: str | None = None
+    retrieved_chunk_ids: list[str]
     context_hash: str | None = Field(default=None, description="SHA-256 of the exact context sent to the LLM.")
     llm_called: bool
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class EligibilityQueryResponse(BaseModel):
@@ -97,9 +97,9 @@ class EligibilityQueryResponse(BaseModel):
     query: str
     status: EligibilityStatus
     assessment: str
-    citations: List[CitationSource]
+    citations: list[CitationSource]
     is_grounded: bool
-    safety_concerns: List[str] = Field(default_factory=list)
+    safety_concerns: list[str] = Field(default_factory=list)
     audit: AuditInfo
 
 
@@ -126,16 +126,16 @@ class ScreeningResponse(BaseModel):
     protocol_id: str
     status: EligibilityStatus
     summary: str
-    criteria: List[CriterionAssessment]
-    failing_criteria: List[str] = Field(default_factory=list, description="chunk_ids that make the patient ineligible.")
-    unresolved_criteria: List[str] = Field(default_factory=list, description="chunk_ids lacking patient information.")
+    criteria: list[CriterionAssessment]
+    failing_criteria: list[str] = Field(default_factory=list, description="chunk_ids that make the patient ineligible.")
+    unresolved_criteria: list[str] = Field(default_factory=list, description="chunk_ids lacking patient information.")
     is_grounded: bool
     audit: AuditInfo
 
 
 class ProtocolSummary(BaseModel):
     protocol_id: str
-    source_documents: List[str]
+    source_documents: list[str]
     chunk_count: int
 
 
@@ -152,8 +152,8 @@ class EvidenceItem(BaseModel):
 
 class LLMAssessment(BaseModel):
     status: EligibilityStatus
-    evidence: List[EvidenceItem]
-    safety_concerns: List[str]
+    evidence: list[EvidenceItem]
+    safety_concerns: list[str]
     rationale: str
 
 
@@ -168,4 +168,4 @@ class LLMCriterionVerdict(BaseModel):
 
 
 class LLMScreeningAssessment(BaseModel):
-    verdicts: List[LLMCriterionVerdict]
+    verdicts: list[LLMCriterionVerdict]

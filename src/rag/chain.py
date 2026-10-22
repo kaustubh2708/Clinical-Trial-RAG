@@ -2,8 +2,10 @@
 
 import logging
 import time
+from collections.abc import Iterable, Iterator, Sequence
+from dataclasses import dataclass
 from itertools import islice
-from typing import Iterable, Iterator, List, Sequence, TypeVar
+from typing import TypeVar
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -13,6 +15,7 @@ from src.config import Settings
 from src.ingestion.indexer import ProtocolIndexer
 from src.ingestion.splitter import strip_context_prefix
 from src.rag.guardrails import hash_for_log, sanitize_context, sha256_hex, verify_quote
+from src.rag.hybrid import BM25, code_terms, reciprocal_rank_fusion
 from src.rag.prompt_templates import (
     INSUFFICIENT_CONTEXT_RESPONSE,
     QA_PROMPT,
@@ -32,6 +35,7 @@ from src.schemas import (
     EligibilityQueryResponse,
     EligibilityStatus,
     LLMAssessment,
+    LLMCriterionVerdict,
     LLMScreeningAssessment,
     PatientScreeningRequest,
     ScreeningResponse,
@@ -45,6 +49,14 @@ UNVERIFIED_EVIDENCE_CONCERN = (
     "Model evidence could not be verified verbatim against the protocol text; the status was downgraded to "
     "INDETERMINATE. Review the protocol manually."
 )
+
+
+@dataclass
+class RetrievalResult:
+    chunks: list[Document]
+    top_relevance: float  # best dense (cosine) relevance; drives the abstention gate
+    mode: str
+    code_match: bool = False  # hybrid only: the query named a code/acronym found verbatim in the protocol
 
 
 class ProtocolNotFoundError(LookupError):
@@ -63,13 +75,13 @@ class LLMInvocationError(RuntimeError):
     """The LLM call failed or returned output that did not match the schema."""
 
 
-def _batched(items: Iterable[T], size: int) -> Iterator[List[T]]:
+def _batched(items: Iterable[T], size: int) -> Iterator[list[T]]:
     iterator = iter(items)
     while batch := list(islice(iterator, size)):
         yield batch
 
 
-def aggregate_screening(criteria: Sequence[CriterionAssessment]) -> tuple[EligibilityStatus, List[str], List[str]]:
+def aggregate_screening(criteria: Sequence[CriterionAssessment]) -> tuple[EligibilityStatus, list[str], list[str]]:
     """Combine per-criterion verdicts: all inclusions met AND no exclusion met.
 
     Returns (status, failing_chunk_ids, unresolved_chunk_ids).
@@ -130,27 +142,56 @@ class EligibilityRAGChain:
             raise LLMInvocationError("LLM returned output that does not match the expected schema.")
         return result
 
-    def _audit(self, prompt_version: str, chunk_ids: List[str], context_hash: str | None, llm_called: bool) -> AuditInfo:
+    def _audit(self, prompt_version: str, chunk_ids: list[str], context_hash: str | None, llm_called: bool,
+               retrieval_mode: str | None = None) -> AuditInfo:
         return AuditInfo(
             model=self.settings.LLM_MODEL_NAME,
             prompt_version=prompt_version,
+            retrieval_mode=retrieval_mode,
             retrieved_chunk_ids=chunk_ids,
             context_hash=context_hash,
             llm_called=llm_called,
         )
 
-    def retrieve(self, query: str, protocol_id: str, top_k: int) -> List[tuple[Document, float]]:
-        """Top-k chunks for one protocol with cosine relevance (1 - cosine distance), filtered by the gate."""
-        results = self.vector_store.similarity_search_with_score(query, k=top_k, filter={"protocol_id": protocol_id})
-        scored = []
-        for doc, distance in results:
+    def retrieve(self, query: str, protocol_id: str, top_k: int) -> RetrievalResult:
+        """Protocol-scoped retrieval with a relevance gate.
+
+        1. Dense search (cosine) restricted to `protocol_id`; relevance = 1 - cosine distance.
+        2. Gate: answer only if the best dense relevance reaches MIN_RELEVANCE_SCORE, or (hybrid mode) the query
+           names a code/acronym such as "MEN2" that appears verbatim in this protocol. Otherwise return nothing.
+        3. dense mode: keep chunks above the gate. hybrid mode: fuse dense and BM25 rankings with RRF.
+        """
+        mode = self.settings.RETRIEVAL_MODE
+        n_dense = max(top_k, self.settings.HYBRID_CANDIDATES) if mode == "hybrid" else top_k
+        dense: list[tuple[Document, float]] = []
+        for doc, distance in self.vector_store.similarity_search_with_score(
+            query, k=n_dense, filter={"protocol_id": protocol_id}
+        ):
             if doc.metadata.get("protocol_id") != protocol_id:  # defence in depth; the filter should prevent this
                 logger.error("Dropped chunk from %s while querying %s", doc.metadata.get("protocol_id"), protocol_id)
                 continue
-            relevance = 1.0 - float(distance)
-            if relevance >= self.settings.MIN_RELEVANCE_SCORE:
-                scored.append((doc, relevance))
-        return scored
+            dense.append((doc, 1.0 - float(distance)))
+        top_relevance = max((score for _, score in dense), default=-1.0)
+        passes_dense_gate = top_relevance >= self.settings.MIN_RELEVANCE_SCORE
+
+        if mode == "dense":
+            kept = [doc for doc, score in dense if score >= self.settings.MIN_RELEVANCE_SCORE][:top_k]
+            return RetrievalResult(chunks=kept, top_relevance=top_relevance, mode=mode)
+
+        corpus = [doc for doc in self.indexer.get_protocol_chunks(protocol_id)
+                  if doc.metadata.get("protocol_id") == protocol_id]
+        bm25 = BM25([doc.page_content for doc in corpus])
+        code_match = bm25.contains_any(code_terms(query))
+        if not (passes_dense_gate or code_match):
+            return RetrievalResult(chunks=[], top_relevance=top_relevance, mode=mode)
+
+        keyword_ids = [corpus[i].metadata["chunk_id"] for i in bm25.rank(query, self.settings.HYBRID_CANDIDATES)]
+        dense_ids = [doc.metadata["chunk_id"] for doc, _ in dense]
+        by_id = {doc.metadata["chunk_id"]: doc for doc in corpus}
+        by_id.update({doc.metadata["chunk_id"]: doc for doc, _ in dense})
+        fused = reciprocal_rank_fusion([dense_ids, keyword_ids], k=self.settings.RRF_K)[:top_k]
+        return RetrievalResult(chunks=[by_id[cid] for cid in fused], top_relevance=top_relevance, mode=mode,
+                               code_match=code_match)
 
     # ------------------------------------------------------------------ Q&A
 
@@ -159,8 +200,8 @@ class EligibilityRAGChain:
         if not self.indexer.protocol_exists(request.protocol_id):
             raise ProtocolNotFoundError(request.protocol_id)
 
-        retrieved = self.retrieve(request.query, request.protocol_id, request.top_k)
-        chunks = [doc for doc, _ in retrieved]
+        retrieval = self.retrieve(request.query, request.protocol_id, request.top_k)
+        chunks = retrieval.chunks
         chunk_ids = [doc.metadata["chunk_id"] for doc in chunks]
 
         if not chunks:
@@ -171,7 +212,7 @@ class EligibilityRAGChain:
                 assessment=INSUFFICIENT_CONTEXT_RESPONSE,
                 citations=[],
                 is_grounded=False,
-                audit=self._audit(QA_PROMPT_VERSION, [], None, llm_called=False),
+                audit=self._audit(QA_PROMPT_VERSION, [], None, llm_called=False, retrieval_mode=retrieval.mode),
             )
             self._log("query", request.query, response.status, chunk_ids, False, started)
             return response
@@ -182,7 +223,7 @@ class EligibilityRAGChain:
         )
 
         by_id = {doc.metadata["chunk_id"]: doc for doc in chunks}
-        citations: List[CitationSource] = []
+        citations: list[CitationSource] = []
         all_verified = bool(llm_output.evidence)
         for item in llm_output.evidence:
             doc = by_id.get(item.chunk_id)
@@ -223,7 +264,8 @@ class EligibilityRAGChain:
             citations=citations,
             is_grounded=is_grounded,
             safety_concerns=safety_concerns if status is not EligibilityStatus.CRITERIA_NOT_SPECIFIED else [],
-            audit=self._audit(QA_PROMPT_VERSION, chunk_ids, sha256_hex(context), llm_called=True),
+            audit=self._audit(QA_PROMPT_VERSION, chunk_ids, sha256_hex(context), llm_called=True,
+                              retrieval_mode=retrieval.mode),
         )
         self._log("query", request.query, response.status, chunk_ids, True, started)
         return response
@@ -239,7 +281,7 @@ class EligibilityRAGChain:
             raise NoCriteriaError(request.protocol_id)
 
         patient_summary = sanitize_context(request.patient_summary)
-        verdicts = {}
+        verdicts: dict[str, LLMCriterionVerdict] = {}
         contexts = []
         for batch in _batched(criteria, self.settings.MAX_SCREENING_CRITERIA):
             criteria_block = format_criteria(batch)
@@ -249,10 +291,10 @@ class EligibilityRAGChain:
                 LLMScreeningAssessment,
                 {"protocol_id": request.protocol_id, "criteria": criteria_block, "patient_summary": patient_summary},
             )
-            for verdict in output.verdicts:
-                verdicts.setdefault(verdict.criterion_id, verdict)  # first verdict wins; unknown ids are ignored
+            for item in output.verdicts:
+                verdicts.setdefault(item.criterion_id, item)  # first verdict wins; unknown ids are ignored
 
-        assessments: List[CriterionAssessment] = []
+        assessments: list[CriterionAssessment] = []
         is_grounded = True
         for criterion in criteria:
             meta = criterion.metadata
@@ -300,7 +342,7 @@ class EligibilityRAGChain:
         self._log("screen", request.patient_summary, status, chunk_ids, True, started)
         return response
 
-    def _log(self, kind: str, text: str, status: EligibilityStatus, chunk_ids: List[str], llm_called: bool,
+    def _log(self, kind: str, text: str, status: EligibilityStatus, chunk_ids: list[str], llm_called: bool,
              started: float) -> None:
         logger.info(
             "%s text_hash=%s status=%s chunks=%d llm_called=%s latency_ms=%.0f",

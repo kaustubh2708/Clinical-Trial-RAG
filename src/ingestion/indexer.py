@@ -2,8 +2,8 @@
 
 import logging
 from collections import defaultdict
+from collections.abc import Sequence
 from pathlib import Path
-from typing import List, Sequence
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
@@ -31,7 +31,7 @@ class ProtocolIndexer:
     def __init__(self, vector_store: Chroma):
         self.vector_store = vector_store
 
-    def _ids_for(self, protocol_id: str) -> List[str]:
+    def _ids_for(self, protocol_id: str) -> list[str]:
         return self.vector_store.get(where={"protocol_id": protocol_id}, include=[])["ids"]
 
     def delete_protocol(self, protocol_id: str) -> int:
@@ -51,7 +51,16 @@ class ProtocolIndexer:
         logger.info("Indexed %d chunk(s) for %s (replaced_existing=%s)", len(chunks), protocol_id, replaced)
         return len(chunks), replaced
 
-    def get_criteria(self, protocol_id: str) -> List[Document]:
+    def get_protocol_chunks(self, protocol_id: str) -> list[Document]:
+        """Every chunk of one protocol, in document order."""
+        result = self.vector_store.get(where={"protocol_id": protocol_id}, include=["documents", "metadatas"])
+        documents = [
+            Document(id=chunk_id, page_content=text, metadata=metadata)
+            for chunk_id, text, metadata in zip(result["ids"], result["documents"], result["metadatas"], strict=True)
+        ]
+        return sorted(documents, key=lambda doc: doc.metadata.get("chunk_index", 0))
+
+    def get_criteria(self, protocol_id: str) -> list[Document]:
         """Every inclusion/exclusion criterion of one protocol, in document order (no similarity search)."""
         result = self.vector_store.get(
             where={"$and": [{"protocol_id": protocol_id}, {"is_criterion": True}]},
@@ -59,14 +68,14 @@ class ProtocolIndexer:
         )
         documents = [
             Document(id=chunk_id, page_content=text, metadata=metadata)
-            for chunk_id, text, metadata in zip(result["ids"], result["documents"], result["metadatas"])
+            for chunk_id, text, metadata in zip(result["ids"], result["documents"], result["metadatas"], strict=True)
         ]
         return sorted(documents, key=lambda doc: doc.metadata.get("chunk_index", 0))
 
     def protocol_exists(self, protocol_id: str) -> bool:
         return bool(self.vector_store.get(where={"protocol_id": protocol_id}, limit=1, include=[])["ids"])
 
-    def list_protocols(self) -> List[ProtocolSummary]:
+    def list_protocols(self) -> list[ProtocolSummary]:
         result = self.vector_store.get(include=["metadatas"])
         counts: dict[str, int] = defaultdict(int)
         sources: dict[str, set[str]] = defaultdict(set)

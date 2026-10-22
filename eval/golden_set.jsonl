@@ -23,3 +23,13 @@
 {"id": "abstain-weather", "protocol_id": "NCT90000002", "kind": "abstain", "question": "What will the weather be like next Tuesday?", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
 {"id": "abstain-recipe", "protocol_id": "NCT90000002", "kind": "abstain", "question": "Give me a recipe for chocolate chip cookies.", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
 {"id": "abstain-tattoo", "protocol_id": "NCT90000001", "kind": "abstain", "question": "Are participants allowed to get tattoos during the study?", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
+{"id": "exact-cyp3a4", "protocol_id": "NCT90000002", "kind": "exact", "question": "CYP3A4 inhibitors", "expected_keywords": ["CYP3A4"]}
+{"id": "exact-men2", "protocol_id": "NCT90000001", "kind": "exact", "question": "MEN2 history", "expected_keywords": ["MEN2"]}
+{"id": "exact-ctcae", "protocol_id": "NCT90000002", "kind": "exact", "question": "CTCAE grading of adverse events", "expected_keywords": ["CTCAE"]}
+{"id": "exact-calcitonin", "protocol_id": "NCT90000001", "kind": "exact", "question": "calcitonin monitoring", "expected_keywords": ["calcitonin"]}
+{"id": "exact-sglt2", "protocol_id": "NCT90000001", "kind": "exact", "question": "SGLT2 inhibitor washout", "expected_keywords": ["SGLT2"]}
+{"id": "exact-alk", "protocol_id": "NCT90000002", "kind": "exact", "question": "ALK rearrangement", "expected_keywords": ["ALK rearrangement"]}
+{"id": "exact-anc", "protocol_id": "NCT90000002", "kind": "exact", "question": "ANC threshold", "expected_keywords": ["neutrophil"]}
+{"id": "exact-pembro", "protocol_id": "NCT90000002", "kind": "exact", "question": "pembrolizumab dose", "expected_keywords": ["pembrolizumab 200 mg"]}
+{"id": "exact-uln", "protocol_id": "NCT90000001", "kind": "exact", "question": "ULN limit for ALT", "expected_keywords": ["ALT or AST"]}
+{"id": "exact-recist", "protocol_id": "NCT90000002", "kind": "exact", "question": "RECIST measurable lesion", "expected_keywords": ["measurable lesion"]}

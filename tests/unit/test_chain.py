@@ -177,3 +177,41 @@ def test_screening_requires_criteria(indexer, make_chain, fake_llm):
     indexer.index_chunks(chunks, T2D_ID)
     with pytest.raises(NoCriteriaError):
         make_chain(fake_llm).screen(PatientScreeningRequest(protocol_id=T2D_ID, patient_summary=PATIENT))
+
+
+# ---------------------------------------------------------------- hybrid retrieval
+
+@pytest.fixture
+def nsclc_indexed(indexer):
+    from tests.conftest import NSCLC_ID, NSCLC_PROTOCOL
+
+    indexer.index_chunks(split_protocol(load_document(NSCLC_PROTOCOL), NSCLC_ID, NSCLC_PROTOCOL.name), NSCLC_ID)
+    return NSCLC_ID
+
+
+def test_hybrid_puts_exact_keyword_match_first(nsclc_indexed, make_chain):
+    # Fake embeddings rank randomly; BM25 is the only signal, and RRF must surface its single match.
+    result = make_chain(None, RETRIEVAL_MODE="hybrid").retrieve("CYP3A4 inhibitors", nsclc_indexed, 4)
+    assert "CYP3A4" in result.chunks[0].page_content
+    assert result.mode == "hybrid" and len(result.chunks) == 4
+
+
+def test_code_in_protocol_passes_the_gate_only_in_hybrid_mode(indexed, make_chain, fake_llm):
+    hybrid = make_chain(fake_llm, RETRIEVAL_MODE="hybrid", MIN_RELEVANCE_SCORE=1.0)
+    result = hybrid.retrieve("MEN2 history", T2D_ID, 4)
+    assert result.code_match is True and any("MEN2" in c.page_content for c in result.chunks)
+
+    dense = make_chain(fake_llm, RETRIEVAL_MODE="dense", MIN_RELEVANCE_SCORE=1.0)
+    assert dense.retrieve("MEN2 history", T2D_ID, 4).chunks == []
+
+
+def test_off_topic_query_still_abstains_in_hybrid_mode(indexed, make_chain, fake_llm):
+    chain = make_chain(fake_llm, RETRIEVAL_MODE="hybrid", MIN_RELEVANCE_SCORE=1.0)
+    response = chain.query(_request("Where should visitors park their cars?"))
+    assert response.status is EligibilityStatus.CRITERIA_NOT_SPECIFIED
+    assert response.audit.retrieval_mode == "hybrid" and fake_llm.call_count == 0
+
+
+def test_dense_mode_matches_previous_behaviour(indexed, make_chain, fake_llm):
+    response = make_chain(fake_llm, RETRIEVAL_MODE="dense").query(_request(top_k=3))
+    assert len(response.audit.retrieved_chunk_ids) == 3 and response.audit.retrieval_mode == "dense"

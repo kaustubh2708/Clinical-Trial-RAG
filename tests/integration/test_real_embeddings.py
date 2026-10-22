@@ -26,12 +26,18 @@ def real_chain(tmp_path_factory):
 
 
 def test_kidney_question_retrieves_egfr_exclusion(real_chain):
-    hits = real_chain.retrieve("Are there kidney function requirements?", T2D_ID, 3)
-    assert any("glomerular filtration" in doc.page_content for doc, _ in hits)
-    assert all(doc.metadata["protocol_id"] == T2D_ID for doc, _ in hits)
+    result = real_chain.retrieve("Are there kidney function requirements?", T2D_ID, 3)
+    assert any("glomerular filtration" in doc.page_content for doc in result.chunks)
+    assert all(doc.metadata["protocol_id"] == T2D_ID for doc in result.chunks)
 
 
 def test_off_topic_question_abstains_without_llm(real_chain):
     response = real_chain.query(EligibilityQueryRequest(query="Give me a cookie recipe.", protocol_id=NSCLC_ID))
     assert response.status is EligibilityStatus.CRITERIA_NOT_SPECIFIED
     assert response.audit.llm_called is False
+
+
+def test_short_acronym_query_passes_the_gate_via_exact_match(real_chain):
+    result = real_chain.retrieve("MEN2 history", T2D_ID, 4)
+    assert result.top_relevance < real_chain.settings.MIN_RELEVANCE_SCORE  # dense alone would abstain
+    assert result.code_match and "MEN2" in result.chunks[0].page_content
