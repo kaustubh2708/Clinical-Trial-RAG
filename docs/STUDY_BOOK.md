@@ -259,7 +259,7 @@ The LLM is the least predictable part of the system, so the design keeps its job
 - **Explicit abstention rule**: if the excerpts do not answer the question, return status `CRITERIA_NOT_SPECIFIED`. The service then prints the exact required sentence: *"CRITERIA NOT SPECIFIED: The provided protocol documents do not contain explicit rules regarding this query."* Code inserts the fixed string, so its wording can never drift.
 - **Evidence rule**: every claim must cite a `chunk_id` and a **verbatim** quote copied from that chunk.
 - **No medical advice**: describe what the protocol says. Never recommend treatment or enrolment.
-- **Versioned**: `PROMPT_VERSION = "qa-v1"` / `"screen-v1"` is logged with every answer, so a change in behaviour can be traced to a prompt change.
+- **Versioned**: `QA_PROMPT_VERSION = "qa-v2"` / `SCREENING_PROMPT_VERSION = "screen-v2"` is logged with every answer, so a change in behaviour can be traced to a prompt change. v2 added an explicit field-by-field output guide and short criterion labels after testing on local models (see the Ollama chapter).
 
 **Structured output instead of text sections**
 
@@ -320,8 +320,10 @@ If the model skips a criterion, code fills it in as `INSUFFICIENT_INFO`. A skipp
 5. **Structured output**: the reply must validate against `LLMAssessment`.
 6. **Citation verification**: for each `EvidenceItem`, check that `chunk_id` was one of the chunks actually given, and that the normalised quote is a substring of that chunk's normalised text. Normalisation lowercases, folds Unicode (NFKC), unifies quote and dash characters, and collapses whitespace. So a curly quote or a line break doesn't fail a true match.
 7. **Grounding decision**: `is_grounded = len(evidence) > 0 and all(quote_verified)`. If status is `CRITERIA_NOT_SPECIFIED`, the fixed sentence is returned and `is_grounded = false` (nothing was claimed, so nothing is grounded).
-8. **Downgrade on failed verification**: if the model said `ELIGIBLE` / `NOT_ELIGIBLE` but a quote failed, the status becomes `INDETERMINATE` and a safety concern explains why. An unverifiable claim is never passed on with confidence.
-9. **Privacy-safe logging**: logs carry a SHA-256 hash of the query, not the text, plus chunk IDs, latency and status.
+8. **Downgrade on failed verification**: if the model said `ELIGIBLE` / `NOT_ELIGIBLE` but a quote failed, the status becomes `INDETERMINATE` and a safety concern explains why. An unverifiable claim is never passed on with confidence. Quotes are checked after removing our own ID markers (`[<chunk id>]`, `[NCT… | Section]`), which models paste in as citations; any other extra text still fails.
+9. **Q&A can rule out, never rule in**: a single question sees only the top-k criteria, so a Q&A `ELIGIBLE` is always downgraded to `INDETERMINATE` with a pointer to `/protocols/screen`. Added after a real local model answered `ELIGIBLE` to two washout questions (30 days since a GLP-1 drug against a 90-day rule) with perfectly verified quotes.
+10. **Screening evidence must be real and relevant**: each decisive verdict's patient evidence must appear verbatim in the summary and share a content term with the criterion. This caught a 7B model citing "No history of pancreatitis" as evidence about pregnancy.
+11. **Privacy-safe logging**: logs carry a SHA-256 hash of the query, not the text, plus chunk IDs, latency and status.
 
 **Why verbatim quotes?** A summary can't be checked mechanically. A quote can: either the characters are in the source or they aren't. This turns "is it hallucinating?" into a string search you can test.
 
@@ -483,9 +485,9 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 6. If the model said `CRITERIA_NOT_SPECIFIED`, return the fixed sentence with no citations. Otherwise `is_grounded = all quotes verified`. A decisive status with unverified evidence is downgraded to `INDETERMINATE`, and a safety concern is added.
 7. `render_assessment()` writes the STATUS / PROTOCOL EVIDENCE / SAFETY CONCERNS text. Fill in `audit`, log hash-only, return.
 
-`screen()` fetches all criteria and sends them in batches of `MAX_SCREENING_CRITERIA`. It verifies each decisive verdict's `patient_evidence` against the patient summary (otherwise the verdict is downgraded to INSUFFICIENT\_INFO), and fills in missing verdicts. Then `aggregate_screening()` applies: exclusion MET or inclusion NOT\_MET → NOT\_ELIGIBLE; else any INSUFFICIENT\_INFO → INDETERMINATE; else ELIGIBLE.
+`screen()` fetches all criteria and gives each a short label (`I1`, `I2`, …, `E1`, …) with `criterion_labels()`. The model only ever sees these labels; code maps them back to chunk IDs, because models misalign 32-character hashes across a long list. Criteria are sent in batches of `MAX_SCREENING_CRITERIA` (1 = one call per criterion). Each decisive verdict's `patient_evidence` must pass two checks or it is downgraded to INSUFFICIENT\_INFO: it must appear verbatim in the patient summary (at least 4 characters, so "BMI 31" counts), and `evidence_mentions_criterion()` must find a shared content term with the criterion. Missing verdicts are filled in as INSUFFICIENT\_INFO. Then `aggregate_screening()` applies: exclusion MET or inclusion NOT\_MET → NOT\_ELIGIBLE; else any INSUFFICIENT\_INFO → INDETERMINATE; else ELIGIBLE.
 
-**10. `src/api/dependencies.py`**: `get_vector_store`, `get_llm` (lazy `ChatOpenAI(model, temperature, seed, timeout, max_retries=2)`; `None` when there is no key), `get_indexer` and `get_rag_chain`. The heavy objects are `lru_cache`d by their configuration values.
+**10. `src/api/dependencies.py`**: `get_vector_store`, `get_llm`, `get_indexer` and `get_rag_chain`. `get_llm` picks the provider: `ChatOpenAI(model, temperature, seed, timeout, max_retries=2, max_completion_tokens)` (`None` when there is no key), or `ChatOllama(model, temperature, seed, base_url, num_ctx, num_predict)` for `LLM_PROVIDER=ollama`. Both clients are imported lazily and `lru_cache`d by their configuration values, and both cap output tokens with `LLM_MAX_OUTPUT_TOKENS`.
 
 **11. `src/api/routes.py`**: `/health`, `/ready`, and under `/api/v1`: `POST /protocols/index`, `POST /protocols/query`, `POST /protocols/screen`, `GET /protocols`, `DELETE /protocols/{id}`. The upload path does five things: `sanitize_filename()`, an extension check (415), the `%PDF-` magic check (415), a streamed save with a size cap (413) or empty-file check (422) via a `.part` temp file, then `ingest_file()`.
 
@@ -496,7 +498,7 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 - `data/sample_protocols/`: two synthetic protocols, NCT90000001 (type 2 diabetes: 7 inclusion and 9 exclusion criteria) and NCT90000002 (lung cancer: 6 and 7).
 - `scripts/fetch_ctgov.py`: pulls real eligibility text. NCT04368728 splits into 6 inclusion and 30 exclusion criteria.
 - `eval/`: `golden_set.jsonl` (35 cases), `run_eval.py`, `results.md`.
-- `tests/`: 97 offline tests (about 3 s) plus 3 `slow` tests with the real model.
+- `tests/`: 115 offline tests (about 4 s) plus 3 `slow` tests with the real model.
 - `pyproject.toml`: ruff, mypy and pytest settings. `requirements-dev.txt` adds pytest, ruff and mypy on top of the runtime `requirements.txt`.
 - `.github/workflows/ci.yml`: lint, type check, tests, retrieval eval with a 0.95 hit-rate floor, Docker build.
 - `Dockerfile`: verified to build and run healthy as uid 10001 `gskapp`. The image is about 2.9 GB, mostly CPU torch (773 MB) and chromadb's dependencies.
@@ -509,7 +511,7 @@ Ingestion writes protocol-tagged chunks. Q&A reads only one trial's chunks and c
 
 ## Testing strategy
 
-The main suite (97 tests) runs offline in about 3 seconds: no OpenAI key, no network, no 90 MB model download. Fakes stand in for both the embedding model and the LLM. Three more tests, marked `slow`, use the real MiniLM model. Test settings live in `pyproject.toml`.
+The main suite (115 tests) runs offline in about 3 seconds: no OpenAI key, no network, no 90 MB model download. Fakes stand in for both the embedding model and the LLM. Three more tests, marked `slow`, use the real MiniLM model. Test settings live in `pyproject.toml`.
 
 **The test pyramid here**
 
@@ -661,6 +663,69 @@ The `-v` volume keeps the Chroma index and uploads when the container is replace
 2. What would break if you ran 4 uvicorn workers with local Chroma?
 3. What is the difference between `/health` and `/ready`?
 
+## Running locally with Ollama and Qwen
+
+Set `LLM_PROVIDER=ollama` and `LLM_MODEL_NAME=qwen2.5:7b`, and the service runs with no API key, and no protocol or patient text leaves the machine. On a 4-core CPU without a GPU, `qwen2.5:7b` answered in about 29 seconds, never made up a quote (28/28 verified) and gave no unsafe answers, but it took several fixes to get there.
+
+**Setup**
+
+```bash
+# install Ollama from https://ollama.com/download, then:
+ollama pull qwen2.5:7b
+export LLM_PROVIDER=ollama LLM_MODEL_NAME=qwen2.5:7b
+export LLM_TIMEOUT_SECONDS=600 MAX_SCREENING_CRITERIA=1
+uvicorn app:app --port 8000
+curl localhost:8000/ready   # shows llm_provider and llm_model
+```
+
+Ollama is a local model server: it downloads model weights, runs them (on GPU if present, otherwise CPU) and exposes an HTTP API on port 11434. `ChatOllama` from `langchain-ollama` talks to it. With `with_structured_output`, Ollama turns the Pydantic JSON schema into a grammar, so the model *cannot* produce invalid JSON. That is called constrained decoding. From Docker, use `OLLAMA_BASE_URL=http://host.docker.internal:11434` with `--add-host=host.docker.internal:host-gateway`; on Linux, start Ollama with `OLLAMA_HOST=0.0.0.0`.
+
+**Settings that matter**
+
+| Setting | Default | Why it exists |
+| --- | --- | --- |
+| `OLLAMA_NUM_CTX` | 8192 | The context window. Ollama truncates longer prompts, so part of the instructions or criteria can silently go missing |
+| `LLM_MAX_OUTPUT_TOKENS` | 2048 | Caps generation (Ollama `num_predict`, OpenAI `max_completion_tokens`) |
+| `MAX_SCREENING_CRITERIA` | 80 | Criteria per LLM call. 1 = one call per criterion, which small models need |
+| `LLM_TIMEOUT_SECONDS` | 60 | Raise to 600 for CPU inference |
+
+**What broke on real models, and the fix for each**
+
+This is the most useful interview material in the book: every item is a real failure, observed in testing, with a fix in code and a test.
+
+| Observed | Cause | Fix |
+| --- | --- | --- |
+| `qwen2.5:3b` generated 6,000+ tokens for one answer | Greedy decoding loops inside a JSON string; nothing stopped it | Output-token cap, and a length limit on every schema field (they become part of the grammar) |
+| Quotes contained the `[NCT… \| Section]` line, repeated | The embedding prefix was shown to the LLM and became a pattern to copy | The LLM sees chunk text without the prefix; section and type arrive as tag attributes |
+| `qwen2.5:7b` appended `[chunk id]` and invented metadata to quotes | The model never saw field descriptions; only the schema was enforced | An explicit field-by-field output guide in the prompt (v2), and our own ID markers ignored during verification |
+| The prompt crashed with `KeyError: '"chunk_id"'` | JSON braces in an f-string that LangChain also treats as a template | Braces written as `{{{{` in the source, plus a test that renders both prompts |
+| Screening verdicts attached to the wrong criteria | 32-character hash IDs are hard to copy across 16 items | Short labels (`I1`, `E3`) mapped back in code |
+| "No history of pancreatitis" cited as evidence about pregnancy | Over-inference from an unrelated fact | Evidence must share a content term with its criterion |
+| "BMI 31" rejected as evidence | The 8-character minimum was meant for protocol quotes | A 4-character minimum for patient evidence |
+| "eGFR 24" judged as not meeting "eGFR below 30" | Arithmetic in a long one-call prompt | Per-criterion mode (`MAX_SCREENING_CRITERIA=1`) got it right |
+| Two washout questions answered `ELIGIBLE` with valid quotes | True quote, wrong reasoning about time windows | Q&A never returns `ELIGIBLE`; only `/protocols/screen` can confirm eligibility |
+
+**Measured results** (`eval/results_ollama_qwen2.5-7b.md`, 35 questions)
+
+| Measure | `qwen2.5:7b` on CPU |
+| --- | --- |
+| Status accuracy (18 labelled) | 0.72 (13/18); every miss was a cautious INDETERMINATE |
+| Unsafe answers | 0 (was 2 before the rule-out-only fix) |
+| Quotes verified | 28/28 |
+| Off-topic abstained | 5/5, no LLM call |
+| Median time per answer | 29 s |
+| Screening, 16 criteria | about 4 minutes |
+
+**Still unsolved:** small models make arithmetic mistakes on thresholds and time windows. In one per-criterion run, "metformin 2000 mg daily" was judged as failing "at least 1500 mg/day". The next step would be deterministic numeric checks, not trusting model arithmetic. Two labels in the eval set were also corrected during this work: rule questions such as "Is a history of pancreatitis exclusionary?" are INDETERMINATE under the prompt's own rules.
+
+**Choosing a model:** roughly 7B parameters is the minimum for verbatim quoting; `qwen2.5:3b` failed every quote (safely rejected, but useless). `qwen3:8b` and larger also work; Qwen3-family models think before answering, which costs time on CPU. With a GPU or Apple Silicon, expect answers in seconds.
+
+**Self-check**
+
+1. Why does constrained decoding guarantee valid JSON but not a correct answer?
+2. Why can a single Q&A answer rule a patient out but never in?
+3. Which three settings would you change first when moving from OpenAI to a local 7B model, and why?
+
 ## Security, PHI and regulatory considerations
 
 A screening request contains patient health information, so where that text goes matters as much as answer quality. This project is a decision-support prototype. It is not a validated system, and the README says so.
@@ -681,7 +746,7 @@ A screening request contains patient health information, so where that text goes
 
 - **No raw query or patient text in logs**: only a SHA-256 hash, the status, chunk IDs and latency (`guardrails.hash_for_log`).
 - **Audit block in every response**: model name, prompt version, retrieved chunk IDs, a hash of the exact context sent, and a timestamp. You can reconstruct which protocol text produced each answer, which is the spirit of a Part 11 audit trail.
-- **Pluggable LLM**: `get_llm()` is the only place the provider is chosen. Moving to Azure OpenAI or a local model is a one-function change.
+- **Pluggable LLM, including fully local**: `get_llm()` is the only place the provider is chosen. `LLM_PROVIDER=ollama` runs a local model (e.g. Qwen) so protocol and patient text never leave the machine, the simplest answer to "how do you keep PHI away from vendors?" See the chapter on running locally with Ollama.
 - **Local embeddings**: protocol text never leaves the machine to be embedded.
 - **Secrets**: `OPENAI_API_KEY` is a `SecretStr`, read from the environment, excluded from the image by `.dockerignore`.
 - **Input hardening**: file type, magic bytes, size limit, filename sanitisation, NCT regex on every entry point.
@@ -732,7 +797,7 @@ Practise these out loud. Aim for two minutes each: answer first, then the reason
 **Safety and domain**
 
 13. **What if a protocol contains a prompt injection?** Tag stripping, a data-not-instructions system rule, structured output with no tools, and quote verification: any claim still needs real quotes.
-14. **What can't your guardrails catch?** A true quote used for a wrong conclusion. That is handled by per-criterion verdicts, an LLM-as-judge in eval, and a human reviewer who makes the decision.
+14. **What can't your guardrails catch?** A true quote used for a wrong conclusion, especially arithmetic. I saw it on a real model: `qwen2.5:7b` judged "eGFR 24" as not meeting "eGFR below 30" when screening all criteria in one call. Mitigations: per-criterion calls (fixed that case), Q&A never returning ELIGIBLE, missing information defaulting to INSUFFICIENT\_INFO, an LLM-as-judge in eval, and a human reviewer who makes the decision. The next step would be deterministic checks for numeric thresholds instead of trusting model arithmetic.
 15. **How would you handle PHI?** De-identify before the LLM, use a provider under a BAA or a private endpoint, never log raw text, keep an audit trail, and add access control.
 
 **Questions to ask them**
@@ -754,6 +819,8 @@ Every dataset in the repo is synthetic or public. No real patient data is used a
 | Real trial eligibility text | [ClinicalTrials.gov API v2](https://clinicaltrials.gov/data-api/about-api), via `scripts/fetch_ctgov.py` | Public, no key needed; downloaded on demand, never committed. Tested on [NCT04368728](https://clinicaltrials.gov/study/NCT04368728) |
 | Embedding model | [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) on Hugging Face | Apache-2.0; 384 dimensions and a 256-token input limit, both checked in code |
 | Patient summaries in tests | Written for this project | Fictional, de-identified style |
+
+Local LLM used in testing: [qwen2.5:7b](https://ollama.com/library/qwen2.5) (and briefly `qwen2.5:3b`), served by [Ollama](https://ollama.com) 0.40.8 on a 4-core CPU. Model licences differ by size, so check the model page before using one commercially.
 
 **Papers behind the methods**
 

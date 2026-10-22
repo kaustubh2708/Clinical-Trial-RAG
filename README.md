@@ -4,11 +4,11 @@
 
 A FastAPI microservice that answers eligibility questions about clinical trial protocols, and pre-screens a patient summary against every criterion of a trial. Answers are grounded in verbatim, verified protocol text.
 
-Built with FastAPI, LangChain, ChromaDB, sentence-transformers and Pydantic v2.
+Built with FastAPI, LangChain, ChromaDB, sentence-transformers and Pydantic v2. Runs with OpenAI, or fully locally with Ollama (e.g. Qwen).
 
 > **Decision support only.** Not a validated medical device. A qualified research coordinator makes every enrolment decision. Use public or synthetic protocols and de-identified patient text only.
 
-**New to the stack?** [`docs/STUDY_BOOK.md`](docs/STUDY_BOOK.md) is a 17-chapter guide to every concept and file in this repo, from the clinical-trials primer to the code walkthrough, evaluation and interview questions.
+**New to the stack?** [`docs/STUDY_BOOK.md`](docs/STUDY_BOOK.md) is an 18-chapter guide to every concept and file in this repo, from the clinical-trials primer to the code walkthrough, evaluation and interview questions.
 
 ## Design in one paragraph
 
@@ -74,6 +74,56 @@ uvicorn app:app --reload --port 8000
 
 Without an API key you can still index, list and delete protocols. Queries that the relevance gate blocks still work too. Endpoints that need the LLM return `503`.
 
+## Run with a local model (Ollama + Qwen)
+
+No API key, and protocol and patient text never leave your machine. The code path is the same; only the model client changes (`get_llm()` in `src/api/dependencies.py`).
+
+```bash
+# 1. Install Ollama (https://ollama.com/download), then pull a Qwen model
+ollama pull qwen2.5:7b
+
+# 2. Point the service at it (or put these lines in .env)
+export LLM_PROVIDER=ollama
+export LLM_MODEL_NAME=qwen2.5:7b
+export LLM_TIMEOUT_SECONDS=600        # CPU inference is slow
+export MAX_SCREENING_CRITERIA=1       # one call per criterion: more reliable for small models
+uvicorn app:app --port 8000
+
+curl http://localhost:8000/ready      # {"llm_provider": "ollama", "llm_model": "qwen2.5:7b", ...}
+```
+
+From Docker, reach Ollama on the host with `-e OLLAMA_BASE_URL=http://host.docker.internal:11434 --add-host=host.docker.internal:host-gateway`. On Linux, also start Ollama with `OLLAMA_HOST=0.0.0.0` so it accepts connections from the container.
+
+Settings that matter for local models:
+
+| Setting | Default | Why |
+| --- | --- | --- |
+| `OLLAMA_NUM_CTX` | 8192 | Ollama's context window. A prompt longer than this is truncated, so part of the instructions or criteria can silently go missing |
+| `LLM_MAX_OUTPUT_TOKENS` | 2048 | Caps generation. Without a cap, a 3B model looped for 6,000+ tokens on one answer |
+| `MAX_SCREENING_CRITERIA` | 80 | Criteria per LLM call. Set to 1 for small models |
+
+Choosing a model: structured output with verbatim quotes needs roughly 7B parameters or more. `qwen2.5:3b` repeatedly looped inside its quotes, so every answer was correctly rejected by quote verification but none were useful. `qwen3:8b` and larger also work; Qwen3-family models "think" before answering, which is slower on CPU.
+
+What testing on `qwen2.5:7b` (4-core CPU, no GPU) showed:
+
+| Measure | Result |
+| --- | --- |
+| Status accuracy, 18 labelled questions | 0.72 (13/18); every miss was a cautious `INDETERMINATE` |
+| Unsafe answers (`ELIGIBLE` when a criterion rules the patient out) | 0 |
+| Quotes verified verbatim against the protocol | 28/28 |
+| Off-topic questions | 5/5 abstained without calling the model |
+| Time per answer | about 29 s (median of 30 calls) |
+| Patient screening, 16 criteria | about 4 min; per-criterion mode caught the eGFR exclusion that one-call mode missed |
+
+Full output: [`eval/results_ollama_qwen2.5-7b.md`](eval/results_ollama_qwen2.5-7b.md). Running on a real model exposed several failure modes, each now handled in code:
+- **Runaway generation**: a 3B model looped for 6,000+ tokens. Output is capped, and every schema field has a length limit.
+- **Citation markers in quotes**: models pasted `[chunk id]` into quotes. Our own ID markers are now ignored during verification; any other extra text still fails.
+- **Misaligned verdicts**: with 32-character IDs, a 7B model attached verdicts to the wrong criteria. The model now sees short labels (`I1`, `E3`) that code maps back.
+- **Irrelevant evidence**: "No history of pancreatitis" was cited for pregnancy. Evidence must now share a term with its criterion.
+- **Confident wrong eligibility**: two washout questions came back `ELIGIBLE` with valid quotes. A Q&A answer can now rule a patient out but never in; only `/protocols/screen` checks every criterion.
+
+What is still not solved: small models make arithmetic mistakes on thresholds and time windows (one screening run judged "metformin 2000 mg" as failing "at least 1500 mg"). Results are decision support for a human reviewer, never a final answer.
+
 ## Example requests
 
 Index a protocol (two synthetic samples ship in `data/sample_protocols/`):
@@ -112,7 +162,7 @@ Response shape (LLM wording varies):
                  "quote": "eGFR) below 30 mL/min/1.73m2 at screening", "quote_verified": true}],
   "is_grounded": true,
   "safety_concerns": ["Severe renal impairment is an exclusion criterion."],
-  "audit": {"model": "gpt-4o-mini", "prompt_version": "qa-v1", "retrieved_chunk_ids": ["3f9c...", "..."],
+  "audit": {"model": "gpt-4o-mini", "prompt_version": "qa-v2", "retrieved_chunk_ids": ["3f9c...", "..."],
             "context_hash": "9b1e...", "llm_called": true, "timestamp": "2026-10-22T08:00:00Z"}
 }
 ```
@@ -138,15 +188,16 @@ Use a real trial: `python -m scripts.fetch_ctgov NCT04368728` writes its eligibi
 | Cross-trial contamination | `{"protocol_id": ...}` filter inside Chroma, plus a post-filter check and a two-trial integration test |
 | Lost inclusion/exclusion context | One chunk per criterion, `criterion_type` metadata, a `[NCT... \| Section]` prefix on every chunk |
 | Answering out of scope | Relevance gate (`MIN_RELEVANCE_SCORE`) skips the LLM; fixed fallback string. Short code queries such as "MEN2" pass only if the code appears verbatim in the protocol |
-| Hallucinated evidence | Structured output; quotes must match the cited chunk verbatim (normalised) or the status is downgraded to `INDETERMINATE` |
-| Missed exclusion in screening | All criteria fetched by metadata, not top-k; missing verdicts become `INSUFFICIENT_INFO`; AND/ANY logic in code |
+| Hallucinated evidence | Structured output with length limits; quotes must match the cited chunk verbatim (normalised) or the status is downgraded to `INDETERMINATE` |
+| Confident wrong eligibility | Q&A sees only top-k criteria, so it never returns `ELIGIBLE` (downgraded to `INDETERMINATE`); only screening can confirm eligibility |
+| Missed exclusion in screening | All criteria fetched by metadata, not top-k; short labels the model can copy; patient evidence must be verbatim and mention the criterion; missing verdicts become `INSUFFICIENT_INFO`; AND/ANY logic in code |
 | Prompt injection in documents | Delimiter tags stripped from document text; "data, not instructions" rule; no tools |
 | Bad uploads | Extension and `%PDF` magic-byte check, size limit (413), empty-text and corrupt-file rejection (422), non-UTF-8 text decoded, filename sanitising. Files are staged and kept only if ingestion succeeds, so a failed re-upload never replaces the previous version |
 | PHI in logs | Only SHA-256 fingerprints of query or patient text are logged |
 
 ## Evaluation
 
-`python -m eval.run_eval` indexes the sample protocols with the real embedding model and runs `eval/golden_set.jsonl`: 20 paraphrased questions, 10 exact-term queries (codes and acronyms such as "CYP3A4" or "MEN2") and 5 out-of-scope questions. It compares dense-only and hybrid retrieval and sweeps the abstention threshold; full output is in [`eval/results.md`](eval/results.md). Add `--with-llm` (with `OPENAI_API_KEY` set) to also measure status accuracy, citation verification rate and grounded rate.
+`python -m eval.run_eval` indexes the sample protocols with the real embedding model and runs `eval/golden_set.jsonl`: 20 paraphrased questions, 10 exact-term queries (codes and acronyms such as "CYP3A4" or "MEN2") and 5 out-of-scope questions. It compares dense-only and hybrid retrieval and sweeps the abstention threshold; full output is in [`eval/results.md`](eval/results.md). Add `--with-llm` to also measure status accuracy, unsafe answers, citation verification rate and grounded rate with a real model (OpenAI, or local Ollama; results for `qwen2.5:7b` are in the Ollama section above).
 
 | Retrieval (top_k=4) | Dense only | Hybrid (default) |
 | --- | --- | --- |
@@ -170,9 +221,10 @@ pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements-dev.txt
 ruff check .      # lint (config in pyproject.toml)
 mypy              # type check src/
-pytest            # 97 tests, offline, ~3 s: fake embeddings + fake LLM, temp Chroma per test
+pytest            # 116 tests, offline, ~4 s: fake embeddings + fake LLM, temp Chroma per test
 pytest -m slow    # 3 tests with the real MiniLM model
 python -m eval.run_eval --min-hit-rate 0.95   # retrieval eval; exits 1 below the floor
+LLM_PROVIDER=ollama LLM_MODEL_NAME=qwen2.5:7b python -m eval.run_eval --with-llm --limit 10
 ```
 
 - Unit tests cover schemas, the splitter, guardrails, BM25/RRF and chain logic.
