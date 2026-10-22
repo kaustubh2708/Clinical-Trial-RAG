@@ -1,0 +1,458 @@
+{
+  "name": "clinical-trial-rag",
+  "description": "Grounded RAG microservice for clinical trial eligibility analysis: a FastAPI service that answers eligibility questions about trial protocols and pre-screens patient summaries against each criterion, with answers grounded in verbatim, verified protocol text. Built on LangChain, ChromaDB, sentence-transformers and Pydantic v2, running with OpenAI or locally via Ollama.",
+  "languages": [
+    "dockerfile",
+    "markdown",
+    "python",
+    "toml",
+    "yaml"
+  ],
+  "frameworks": [
+    "FastAPI",
+    "Uvicorn",
+    "Pydantic",
+    "LangChain",
+    "ChromaDB",
+    "Pytest",
+    "Docker",
+    "GitHub Actions"
+  ],
+  "files": [
+    {
+      "path": ".dockerignore",
+      "language": "unknown",
+      "sizeLines": 23,
+      "fileCategory": "infra"
+    },
+    {
+      "path": ".env.example",
+      "language": "config",
+      "sizeLines": 36,
+      "fileCategory": "config"
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "language": "yaml",
+      "sizeLines": 64,
+      "fileCategory": "infra"
+    },
+    {
+      "path": "Dockerfile",
+      "language": "dockerfile",
+      "sizeLines": 54,
+      "fileCategory": "infra"
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "sizeLines": 288,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "app.py",
+      "language": "python",
+      "sizeLines": 79,
+      "fileCategory": "code"
+    },
+    {
+      "path": "data/chroma_db/.gitkeep",
+      "language": "unknown",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "data/raw_protocols/.gitkeep",
+      "language": "unknown",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "data/sample_protocols/NCT90000001_t2d_protocol.txt",
+      "language": "txt",
+      "sizeLines": 39,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "data/sample_protocols/NCT90000002_nsclc_protocol.txt",
+      "language": "txt",
+      "sizeLines": 38,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "docs/STUDY_BOOK.md",
+      "language": "markdown",
+      "sizeLines": 884,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "eval/__init__.py",
+      "language": "python",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "eval/golden_set.jsonl",
+      "language": "jsonl",
+      "sizeLines": 35,
+      "fileCategory": "code"
+    },
+    {
+      "path": "eval/results.md",
+      "language": "markdown",
+      "sizeLines": 65,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "eval/results_ollama_qwen2.5-7b.md",
+      "language": "markdown",
+      "sizeLines": 112,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "eval/run_eval.py",
+      "language": "python",
+      "sizeLines": 208,
+      "fileCategory": "code"
+    },
+    {
+      "path": "pyproject.toml",
+      "language": "toml",
+      "sizeLines": 28,
+      "fileCategory": "config"
+    },
+    {
+      "path": "requirements-dev.txt",
+      "language": "txt",
+      "sizeLines": 4,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "requirements.txt",
+      "language": "txt",
+      "sizeLines": 21,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "scripts/__init__.py",
+      "language": "python",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "scripts/fetch_ctgov.py",
+      "language": "python",
+      "sizeLines": 65,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/__init__.py",
+      "language": "python",
+      "sizeLines": 3,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/api/__init__.py",
+      "language": "python",
+      "sizeLines": 1,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/api/dependencies.py",
+      "language": "python",
+      "sizeLines": 80,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/api/routes.py",
+      "language": "python",
+      "sizeLines": 141,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/config.py",
+      "language": "python",
+      "sizeLines": 60,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/ingestion/__init__.py",
+      "language": "python",
+      "sizeLines": 1,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/ingestion/indexer.py",
+      "language": "python",
+      "sizeLines": 113,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/ingestion/parser.py",
+      "language": "python",
+      "sizeLines": 61,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/ingestion/splitter.py",
+      "language": "python",
+      "sizeLines": 202,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/rag/__init__.py",
+      "language": "python",
+      "sizeLines": 1,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/rag/chain.py",
+      "language": "python",
+      "sizeLines": 380,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/rag/embeddings.py",
+      "language": "python",
+      "sizeLines": 23,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/rag/guardrails.py",
+      "language": "python",
+      "sizeLines": 88,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/rag/hybrid.py",
+      "language": "python",
+      "sizeLines": 91,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/rag/prompt_templates.py",
+      "language": "python",
+      "sizeLines": 128,
+      "fileCategory": "code"
+    },
+    {
+      "path": "src/schemas.py",
+      "language": "python",
+      "sizeLines": 179,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/__init__.py",
+      "language": "python",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/conftest.py",
+      "language": "python",
+      "sizeLines": 166,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/integration/__init__.py",
+      "language": "python",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/integration/test_endpoints.py",
+      "language": "python",
+      "sizeLines": 190,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/integration/test_real_embeddings.py",
+      "language": "python",
+      "sizeLines": 43,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/unit/__init__.py",
+      "language": "python",
+      "sizeLines": 0,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/unit/test_chain.py",
+      "language": "python",
+      "sizeLines": 272,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/unit/test_dependencies.py",
+      "language": "python",
+      "sizeLines": 29,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/unit/test_guardrails.py",
+      "language": "python",
+      "sizeLines": 84,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/unit/test_hybrid.py",
+      "language": "python",
+      "sizeLines": 48,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/unit/test_schemas.py",
+      "language": "python",
+      "sizeLines": 68,
+      "fileCategory": "code"
+    },
+    {
+      "path": "tests/unit/test_splitter.py",
+      "language": "python",
+      "sizeLines": 119,
+      "fileCategory": "code"
+    }
+  ],
+  "totalFiles": 49,
+  "filteredByIgnore": 1,
+  "estimatedComplexity": "moderate",
+  "importMap": {
+    ".dockerignore": [],
+    ".env.example": [],
+    ".github/workflows/ci.yml": [],
+    "Dockerfile": [],
+    "README.md": [],
+    "app.py": [
+      "src/__init__.py",
+      "src/api/routes.py",
+      "src/config.py",
+      "src/ingestion/parser.py",
+      "src/rag/chain.py"
+    ],
+    "data/chroma_db/.gitkeep": [],
+    "data/raw_protocols/.gitkeep": [],
+    "data/sample_protocols/NCT90000001_t2d_protocol.txt": [],
+    "data/sample_protocols/NCT90000002_nsclc_protocol.txt": [],
+    "docs/STUDY_BOOK.md": [],
+    "eval/__init__.py": [],
+    "eval/golden_set.jsonl": [],
+    "eval/results.md": [],
+    "eval/results_ollama_qwen2.5-7b.md": [],
+    "eval/run_eval.py": [
+      "src/config.py",
+      "src/ingestion/indexer.py",
+      "src/ingestion/parser.py",
+      "src/ingestion/splitter.py",
+      "src/rag/chain.py",
+      "src/rag/embeddings.py",
+      "src/schemas.py"
+    ],
+    "pyproject.toml": [],
+    "requirements-dev.txt": [],
+    "requirements.txt": [],
+    "scripts/__init__.py": [],
+    "scripts/fetch_ctgov.py": [],
+    "src/__init__.py": [],
+    "src/api/__init__.py": [],
+    "src/api/dependencies.py": [
+      "src/config.py",
+      "src/ingestion/indexer.py",
+      "src/rag/chain.py",
+      "src/rag/embeddings.py"
+    ],
+    "src/api/routes.py": [
+      "src/api/dependencies.py",
+      "src/config.py",
+      "src/ingestion/indexer.py",
+      "src/ingestion/parser.py",
+      "src/rag/chain.py",
+      "src/schemas.py"
+    ],
+    "src/config.py": [],
+    "src/ingestion/__init__.py": [],
+    "src/ingestion/indexer.py": [
+      "src/ingestion/parser.py",
+      "src/ingestion/splitter.py",
+      "src/schemas.py"
+    ],
+    "src/ingestion/parser.py": [],
+    "src/ingestion/splitter.py": [
+      "src/schemas.py"
+    ],
+    "src/rag/__init__.py": [],
+    "src/rag/chain.py": [
+      "src/config.py",
+      "src/ingestion/indexer.py",
+      "src/ingestion/splitter.py",
+      "src/rag/guardrails.py",
+      "src/rag/hybrid.py",
+      "src/rag/prompt_templates.py",
+      "src/schemas.py"
+    ],
+    "src/rag/embeddings.py": [
+      "src/config.py"
+    ],
+    "src/rag/guardrails.py": [],
+    "src/rag/hybrid.py": [],
+    "src/rag/prompt_templates.py": [
+      "src/ingestion/splitter.py",
+      "src/rag/guardrails.py"
+    ],
+    "src/schemas.py": [
+      "src/config.py"
+    ],
+    "tests/__init__.py": [],
+    "tests/conftest.py": [
+      "app.py",
+      "src/api/dependencies.py",
+      "src/config.py",
+      "src/ingestion/indexer.py",
+      "src/rag/chain.py",
+      "src/schemas.py"
+    ],
+    "tests/integration/__init__.py": [],
+    "tests/integration/test_endpoints.py": [
+      "src/api/dependencies.py",
+      "src/rag/prompt_templates.py",
+      "src/schemas.py",
+      "tests/conftest.py"
+    ],
+    "tests/integration/test_real_embeddings.py": [
+      "src/ingestion/indexer.py",
+      "src/ingestion/parser.py",
+      "src/ingestion/splitter.py",
+      "src/rag/chain.py",
+      "src/rag/embeddings.py",
+      "src/schemas.py",
+      "tests/conftest.py"
+    ],
+    "tests/unit/__init__.py": [],
+    "tests/unit/test_chain.py": [
+      "src/ingestion/parser.py",
+      "src/ingestion/splitter.py",
+      "src/rag/chain.py",
+      "src/rag/prompt_templates.py",
+      "src/schemas.py",
+      "tests/conftest.py"
+    ],
+    "tests/unit/test_dependencies.py": [
+      "src/api/dependencies.py",
+      "src/config.py"
+    ],
+    "tests/unit/test_guardrails.py": [
+      "src/rag/guardrails.py"
+    ],
+    "tests/unit/test_hybrid.py": [
+      "src/rag/hybrid.py"
+    ],
+    "tests/unit/test_schemas.py": [
+      "src/schemas.py"
+    ],
+    "tests/unit/test_splitter.py": [
+      "src/ingestion/parser.py",
+      "src/ingestion/splitter.py",
+      "tests/conftest.py"
+    ]
+  }
+}

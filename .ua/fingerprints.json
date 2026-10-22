@@ -1,0 +1,3637 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "1821c7363fe33de5ff003dfd9591bbc07631ed78",
+  "generatedAt": "2026-10-22T12:06:15.238Z",
+  "files": {
+    ".dockerignore": {
+      "filePath": ".dockerignore",
+      "contentHash": "f22363f6647cfd08e327621b1c5a2eb76f5a4890212d50e1187d263040197bdc",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 24,
+      "hasStructuralAnalysis": false
+    },
+    ".env.example": {
+      "filePath": ".env.example",
+      "contentHash": "e902eda02c5a7b24df46cd18586d624cbc9b50635ae8ce064acf108bdfac2e04",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 37,
+      "hasStructuralAnalysis": false
+    },
+    ".github/workflows/ci.yml": {
+      "filePath": ".github/workflows/ci.yml",
+      "contentHash": "2e38ec5175d8cd0d940b63e9a05edc35833ede9f390ec2b4a27f78ee141826be",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 65,
+      "hasStructuralAnalysis": false
+    },
+    "Dockerfile": {
+      "filePath": "Dockerfile",
+      "contentHash": "8c66d24c6a5baa638abb0ecc391edcfa0ab25d4b3436bd03e084480f6b00d784",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 55,
+      "hasStructuralAnalysis": false
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "0a3c9197c391febba147e988cff9c5cca99a42375af0b5247a722dd91970fd0c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 289,
+      "hasStructuralAnalysis": false
+    },
+    "app.py": {
+      "filePath": "app.py",
+      "contentHash": "8c5c46b2f8835a50ec8a1695531906fd14ad946d0363250840485c471a501c6c",
+      "functions": [
+        {
+          "name": "lifespan",
+          "params": [
+            "_"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "create_app",
+          "params": [],
+          "returnType": "FastAPI",
+          "exported": true,
+          "lineCount": 34
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "time"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "uuid"
+          ]
+        },
+        {
+          "source": "contextlib",
+          "specifiers": [
+            "asynccontextmanager"
+          ]
+        },
+        {
+          "source": "fastapi",
+          "specifiers": [
+            "FastAPI",
+            "Request"
+          ]
+        },
+        {
+          "source": "fastapi.responses",
+          "specifiers": [
+            "JSONResponse"
+          ]
+        },
+        {
+          "source": "src",
+          "specifiers": [
+            "__version__"
+          ]
+        },
+        {
+          "source": "src.api.routes",
+          "specifiers": [
+            "health_router",
+            "router"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "get_settings"
+          ]
+        },
+        {
+          "source": "src.ingestion.parser",
+          "specifiers": [
+            "DocumentParseError",
+            "EmptyDocumentError",
+            "UnsupportedFileTypeError"
+          ]
+        },
+        {
+          "source": "src.rag.chain",
+          "specifiers": [
+            "LLMInvocationError",
+            "LLMNotConfiguredError",
+            "NoCriteriaError",
+            "ProtocolNotFoundError"
+          ]
+        }
+      ],
+      "exports": [
+        "lifespan",
+        "create_app"
+      ],
+      "totalLines": 80,
+      "hasStructuralAnalysis": true
+    },
+    "data/chroma_db/.gitkeep": {
+      "filePath": "data/chroma_db/.gitkeep",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": false
+    },
+    "data/raw_protocols/.gitkeep": {
+      "filePath": "data/raw_protocols/.gitkeep",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": false
+    },
+    "data/sample_protocols/NCT90000001_t2d_protocol.txt": {
+      "filePath": "data/sample_protocols/NCT90000001_t2d_protocol.txt",
+      "contentHash": "017aa5f559d8d52175e24c98c359308551bcbe8b76ce25028967416c1f9ea759",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 40,
+      "hasStructuralAnalysis": false
+    },
+    "data/sample_protocols/NCT90000002_nsclc_protocol.txt": {
+      "filePath": "data/sample_protocols/NCT90000002_nsclc_protocol.txt",
+      "contentHash": "86706be4c2304c377446f0fc9e76400fa9e23d95c614866d306a4bc1c2fa70cb",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 39,
+      "hasStructuralAnalysis": false
+    },
+    "docs/STUDY_BOOK.md": {
+      "filePath": "docs/STUDY_BOOK.md",
+      "contentHash": "24a8a4e8aff65e9b863ab033aa96e441b025ae92533cdd22fe5086afce4485a7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 885,
+      "hasStructuralAnalysis": false
+    },
+    "eval/__init__.py": {
+      "filePath": "eval/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "eval/golden_set.jsonl": {
+      "filePath": "eval/golden_set.jsonl",
+      "contentHash": "e0bb86b504fe891bf27d98cab9ba243056fd694a5873281c9130e3bfbccbc73c",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 36,
+      "hasStructuralAnalysis": false
+    },
+    "eval/results.md": {
+      "filePath": "eval/results.md",
+      "contentHash": "29313d0caf77802eb2c00affd556d35cd09129fa103c7f67297af76b791be449",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 66,
+      "hasStructuralAnalysis": false
+    },
+    "eval/results_ollama_qwen2.5-7b.md": {
+      "filePath": "eval/results_ollama_qwen2.5-7b.md",
+      "contentHash": "ce0d9e4edb12c0a48f2d548e22244542224670b92ff0f8c5f6b2500cd290f62e",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 113,
+      "hasStructuralAnalysis": false
+    },
+    "eval/run_eval.py": {
+      "filePath": "eval/run_eval.py",
+      "contentHash": "e1f1628b0ee810616d224e4f774c9701efa816d5ba09df8c10751ccecb8c1d91",
+      "functions": [
+        {
+          "name": "load_cases",
+          "params": [],
+          "returnType": "list[dict]",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "build_chain",
+          "params": [
+            "settings",
+            "llm"
+          ],
+          "returnType": "EligibilityRAGChain",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "evaluate_retrieval",
+          "params": [
+            "chain",
+            "cases",
+            "top_k"
+          ],
+          "returnType": "list[CaseResult]",
+          "exported": true,
+          "lineCount": 19
+        },
+        {
+          "name": "hit_rate",
+          "params": [
+            "results"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "mrr",
+          "params": [
+            "results"
+          ],
+          "returnType": "float",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "retrieval_report",
+          "params": [
+            "by_mode",
+            "thresholds",
+            "top_k"
+          ],
+          "returnType": "list[str]",
+          "exported": true,
+          "lineCount": 48
+        },
+        {
+          "name": "llm_report",
+          "params": [
+            "settings",
+            "cases",
+            "top_k"
+          ],
+          "returnType": "list[str]",
+          "exported": true,
+          "lineCount": 35
+        },
+        {
+          "name": "main",
+          "params": [],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 32
+        }
+      ],
+      "classes": [
+        {
+          "name": "CaseResult",
+          "methods": [],
+          "properties": [
+            "case",
+            "rank",
+            "top_relevance",
+            "code_match",
+            "contaminated",
+            "retrieved"
+          ],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "json",
+          "specifiers": [
+            "json"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempfile"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "statistics",
+          "specifiers": [
+            "mean"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "Settings"
+          ]
+        },
+        {
+          "source": "src.ingestion.indexer",
+          "specifiers": [
+            "ProtocolIndexer",
+            "build_vector_store"
+          ]
+        },
+        {
+          "source": "src.ingestion.parser",
+          "specifiers": [
+            "load_document"
+          ]
+        },
+        {
+          "source": "src.ingestion.splitter",
+          "specifiers": [
+            "split_protocol",
+            "strip_context_prefix"
+          ]
+        },
+        {
+          "source": "src.rag.chain",
+          "specifiers": [
+            "EligibilityRAGChain"
+          ]
+        },
+        {
+          "source": "src.rag.embeddings",
+          "specifiers": [
+            "get_embeddings"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "EligibilityQueryRequest"
+          ]
+        }
+      ],
+      "exports": [
+        "CaseResult",
+        "load_cases",
+        "build_chain",
+        "evaluate_retrieval",
+        "hit_rate",
+        "mrr",
+        "retrieval_report",
+        "llm_report",
+        "main"
+      ],
+      "totalLines": 209,
+      "hasStructuralAnalysis": true
+    },
+    "pyproject.toml": {
+      "filePath": "pyproject.toml",
+      "contentHash": "f9d70071204cdfb5e0bef3843d40683656ee39b894fe31ef6b3bc7a82739540a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 29,
+      "hasStructuralAnalysis": false
+    },
+    "requirements-dev.txt": {
+      "filePath": "requirements-dev.txt",
+      "contentHash": "d0c90ed05abded748861bec98e3b9f09f7e642c3dde76b82a49f0392e5b09361",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 5,
+      "hasStructuralAnalysis": false
+    },
+    "requirements.txt": {
+      "filePath": "requirements.txt",
+      "contentHash": "603e8c4a5f971be1ed11ba405e06f9b3479736f0ad759dc799703b6e6d488cd8",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 22,
+      "hasStructuralAnalysis": false
+    },
+    "scripts/__init__.py": {
+      "filePath": "scripts/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "scripts/fetch_ctgov.py": {
+      "filePath": "scripts/fetch_ctgov.py",
+      "contentHash": "873561d473440dc092f44a5db900051076209be97d7f94fe2e37125d9235b8a8",
+      "functions": [
+        {
+          "name": "fetch_study",
+          "params": [
+            "nct_id"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "to_protocol_text",
+          "params": [
+            "study"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 21
+        },
+        {
+          "name": "main",
+          "params": [],
+          "returnType": "None",
+          "exported": true,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "argparse",
+          "specifiers": [
+            "argparse"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "sys",
+          "specifiers": [
+            "sys"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "httpx",
+          "specifiers": [
+            "httpx"
+          ]
+        }
+      ],
+      "exports": [
+        "fetch_study",
+        "to_protocol_text",
+        "main"
+      ],
+      "totalLines": 66,
+      "hasStructuralAnalysis": true
+    },
+    "src/__init__.py": {
+      "filePath": "src/__init__.py",
+      "contentHash": "0c0ce0022bac4b07060afbc0bcfe1a97ba71d50c9bbdbdebae4d360a63c25445",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "src/api/__init__.py": {
+      "filePath": "src/api/__init__.py",
+      "contentHash": "e2335f39dcd879ded81df80bdca72eeed21bc430de080b1d57e13b94681fa15d",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": true
+    },
+    "src/api/dependencies.py": {
+      "filePath": "src/api/dependencies.py",
+      "contentHash": "b0533b31159fa2e40f517ff092b0ad1f877e28f9808d9a33a9e9940ea6d28d22",
+      "functions": [
+        {
+          "name": "_cached_vector_store",
+          "params": [
+            "persist_directory",
+            "collection_name"
+          ],
+          "returnType": "Chroma",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "get_vector_store",
+          "params": [
+            "settings"
+          ],
+          "returnType": "Chroma",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "_cached_llm",
+          "params": [
+            "model",
+            "temperature",
+            "seed",
+            "timeout",
+            "max_tokens",
+            "api_key"
+          ],
+          "returnType": "BaseChatModel",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "_cached_ollama",
+          "params": [
+            "model",
+            "temperature",
+            "seed",
+            "timeout",
+            "max_tokens",
+            "base_url",
+            "num_ctx"
+          ],
+          "returnType": "BaseChatModel",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "get_llm",
+          "params": [
+            "settings"
+          ],
+          "returnType": "BaseChatModel | None",
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "get_indexer",
+          "params": [
+            "vector_store"
+          ],
+          "returnType": "ProtocolIndexer",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "get_rag_chain",
+          "params": [
+            "vector_store",
+            "indexer",
+            "llm",
+            "settings"
+          ],
+          "returnType": "EligibilityRAGChain",
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "functools",
+          "specifiers": [
+            "lru_cache"
+          ]
+        },
+        {
+          "source": "fastapi",
+          "specifiers": [
+            "Depends"
+          ]
+        },
+        {
+          "source": "langchain_chroma",
+          "specifiers": [
+            "Chroma"
+          ]
+        },
+        {
+          "source": "langchain_core.language_models",
+          "specifiers": [
+            "BaseChatModel"
+          ]
+        },
+        {
+          "source": "pydantic",
+          "specifiers": [
+            "SecretStr"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "Settings",
+            "get_settings"
+          ]
+        },
+        {
+          "source": "src.ingestion.indexer",
+          "specifiers": [
+            "ProtocolIndexer",
+            "build_vector_store"
+          ]
+        },
+        {
+          "source": "src.rag.chain",
+          "specifiers": [
+            "EligibilityRAGChain"
+          ]
+        },
+        {
+          "source": "src.rag.embeddings",
+          "specifiers": [
+            "get_embeddings"
+          ]
+        }
+      ],
+      "exports": [
+        "_cached_vector_store",
+        "get_vector_store",
+        "_cached_llm",
+        "_cached_ollama",
+        "get_llm",
+        "get_indexer",
+        "get_rag_chain"
+      ],
+      "totalLines": 81,
+      "hasStructuralAnalysis": true
+    },
+    "src/api/routes.py": {
+      "filePath": "src/api/routes.py",
+      "contentHash": "c7fce3571d44036f0f4b01a764cf195324f3e55dad6da20e92b18af5d6f6b513",
+      "functions": [
+        {
+          "name": "sanitize_filename",
+          "params": [
+            "filename"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "_stage_upload",
+          "params": [
+            "file",
+            "upload_dir",
+            "safe_name",
+            "max_bytes"
+          ],
+          "returnType": "FilePath",
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "health",
+          "params": [],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "ready",
+          "params": [
+            "settings"
+          ],
+          "returnType": "JSONResponse",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "index_protocol",
+          "params": [
+            "file",
+            "protocol_id",
+            "settings",
+            "indexer"
+          ],
+          "returnType": "ProtocolUploadResponse",
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "query_protocol",
+          "params": [
+            "request",
+            "chain"
+          ],
+          "returnType": "EligibilityQueryResponse",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "screen_patient",
+          "params": [
+            "request",
+            "chain"
+          ],
+          "returnType": "ScreeningResponse",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "list_protocols",
+          "params": [
+            "indexer"
+          ],
+          "returnType": "list[ProtocolSummary]",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "delete_protocol",
+          "params": [
+            "protocol_id",
+            "indexer"
+          ],
+          "returnType": "dict",
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "uuid"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "FilePath"
+          ]
+        },
+        {
+          "source": "fastapi",
+          "specifiers": [
+            "APIRouter",
+            "Depends",
+            "File",
+            "Form",
+            "HTTPException",
+            "Path",
+            "UploadFile",
+            "status"
+          ]
+        },
+        {
+          "source": "fastapi.responses",
+          "specifiers": [
+            "JSONResponse"
+          ]
+        },
+        {
+          "source": "src.api.dependencies",
+          "specifiers": [
+            "get_indexer",
+            "get_llm",
+            "get_rag_chain",
+            "get_vector_store"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "Settings",
+            "get_settings"
+          ]
+        },
+        {
+          "source": "src.ingestion.indexer",
+          "specifiers": [
+            "ProtocolIndexer",
+            "ingest_file"
+          ]
+        },
+        {
+          "source": "src.ingestion.parser",
+          "specifiers": [
+            "SUPPORTED_EXTENSIONS"
+          ]
+        },
+        {
+          "source": "src.rag.chain",
+          "specifiers": [
+            "EligibilityRAGChain"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "NCT_ID_PATTERN",
+            "EligibilityQueryRequest",
+            "EligibilityQueryResponse",
+            "PatientScreeningRequest",
+            "ProtocolSummary",
+            "ProtocolUploadResponse",
+            "ScreeningResponse"
+          ]
+        }
+      ],
+      "exports": [
+        "sanitize_filename",
+        "_stage_upload",
+        "health",
+        "ready",
+        "index_protocol",
+        "query_protocol",
+        "screen_patient",
+        "list_protocols",
+        "delete_protocol"
+      ],
+      "totalLines": 142,
+      "hasStructuralAnalysis": true
+    },
+    "src/config.py": {
+      "filePath": "src/config.py",
+      "contentHash": "2620f5ec41a2826e68a130f5b64308747a5c38d032006df3d6e7ba6887cb73d6",
+      "functions": [
+        {
+          "name": "get_settings",
+          "params": [],
+          "returnType": "Settings",
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "classes": [
+        {
+          "name": "Settings",
+          "methods": [
+            "ensure_directories"
+          ],
+          "properties": [
+            "CHROMA_PERSIST_DIR",
+            "CHROMA_COLLECTION_NAME",
+            "UPLOAD_DIR",
+            "MAX_UPLOAD_MB",
+            "EMBEDDING_MODEL_NAME",
+            "LLM_PROVIDER",
+            "LLM_MODEL_NAME",
+            "LLM_TEMPERATURE",
+            "LLM_SEED",
+            "LLM_TIMEOUT_SECONDS",
+            "LLM_MAX_OUTPUT_TOKENS",
+            "OPENAI_API_KEY",
+            "OLLAMA_BASE_URL",
+            "OLLAMA_NUM_CTX",
+            "CHUNK_SIZE",
+            "CHUNK_OVERLAP",
+            "RETRIEVAL_TOP_K",
+            "RETRIEVAL_MODE",
+            "HYBRID_CANDIDATES",
+            "RRF_K",
+            "MIN_RELEVANCE_SCORE",
+            "MAX_SCREENING_CRITERIA",
+            "LOG_LEVEL"
+          ],
+          "exported": true,
+          "lineCount": 45
+        }
+      ],
+      "imports": [
+        {
+          "source": "functools",
+          "specifiers": [
+            "lru_cache"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Literal"
+          ]
+        },
+        {
+          "source": "pydantic",
+          "specifiers": [
+            "Field",
+            "SecretStr"
+          ]
+        },
+        {
+          "source": "pydantic_settings",
+          "specifiers": [
+            "BaseSettings",
+            "SettingsConfigDict"
+          ]
+        }
+      ],
+      "exports": [
+        "Settings",
+        "get_settings"
+      ],
+      "totalLines": 61,
+      "hasStructuralAnalysis": true
+    },
+    "src/ingestion/__init__.py": {
+      "filePath": "src/ingestion/__init__.py",
+      "contentHash": "74ed74263def690b654a3ee3a913e061fb56b246493176c84faa2420ba2ded64",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": true
+    },
+    "src/ingestion/indexer.py": {
+      "filePath": "src/ingestion/indexer.py",
+      "contentHash": "df68b8360a81cc685e023031a1446f3a7a6cf3f3eeb7a2f471afda6b0974e23c",
+      "functions": [
+        {
+          "name": "build_vector_store",
+          "params": [
+            "embeddings",
+            "persist_directory",
+            "collection_name"
+          ],
+          "returnType": "Chroma",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "ingest_file",
+          "params": [
+            "file_path",
+            "protocol_id",
+            "source_filename",
+            "indexer",
+            "chunk_size",
+            "chunk_overlap"
+          ],
+          "returnType": "ProtocolUploadResponse",
+          "exported": true,
+          "lineCount": 22
+        }
+      ],
+      "classes": [
+        {
+          "name": "ProtocolIndexer",
+          "methods": [
+            "__init__",
+            "_ids_for",
+            "delete_protocol",
+            "index_chunks",
+            "get_protocol_chunks",
+            "get_criteria",
+            "protocol_exists",
+            "list_protocols"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 62
+        }
+      ],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "collections",
+          "specifiers": [
+            "defaultdict"
+          ]
+        },
+        {
+          "source": "collections.abc",
+          "specifiers": [
+            "Sequence"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "langchain_chroma",
+          "specifiers": [
+            "Chroma"
+          ]
+        },
+        {
+          "source": "langchain_core.documents",
+          "specifiers": [
+            "Document"
+          ]
+        },
+        {
+          "source": "langchain_core.embeddings",
+          "specifiers": [
+            "Embeddings"
+          ]
+        },
+        {
+          "source": "src.ingestion.parser",
+          "specifiers": [
+            "EmptyDocumentError",
+            "load_document"
+          ]
+        },
+        {
+          "source": "src.ingestion.splitter",
+          "specifiers": [
+            "split_protocol"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "ProtocolSummary",
+            "ProtocolUploadResponse"
+          ]
+        }
+      ],
+      "exports": [
+        "build_vector_store",
+        "ProtocolIndexer",
+        "ingest_file"
+      ],
+      "totalLines": 114,
+      "hasStructuralAnalysis": true
+    },
+    "src/ingestion/parser.py": {
+      "filePath": "src/ingestion/parser.py",
+      "contentHash": "6c9321fcefcfd8a0e0a386c27665f7aec12c28b5cfdf2c6a3280a28177dfe710",
+      "functions": [
+        {
+          "name": "_load_text",
+          "params": [
+            "path"
+          ],
+          "returnType": "list[Document]",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "load_document",
+          "params": [
+            "file_path"
+          ],
+          "returnType": "list[Document]",
+          "exported": true,
+          "lineCount": 20
+        }
+      ],
+      "classes": [
+        {
+          "name": "UnsupportedFileTypeError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "EmptyDocumentError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "DocumentParseError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "langchain_community.document_loaders",
+          "specifiers": [
+            "PyPDFLoader",
+            "TextLoader"
+          ]
+        },
+        {
+          "source": "langchain_core.documents",
+          "specifiers": [
+            "Document"
+          ]
+        }
+      ],
+      "exports": [
+        "UnsupportedFileTypeError",
+        "EmptyDocumentError",
+        "DocumentParseError",
+        "_load_text",
+        "load_document"
+      ],
+      "totalLines": 62,
+      "hasStructuralAnalysis": true
+    },
+    "src/ingestion/splitter.py": {
+      "filePath": "src/ingestion/splitter.py",
+      "contentHash": "742560877600e8c74cf8cc5c5a4181b088a5095e21db539d6594cab6cd8f1d3a",
+      "functions": [
+        {
+          "name": "build_text_splitter",
+          "params": [
+            "chunk_size",
+            "chunk_overlap"
+          ],
+          "returnType": "RecursiveCharacterTextSplitter",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "strip_context_prefix",
+          "params": [
+            "page_content"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "make_chunk_id",
+          "params": [
+            "protocol_id",
+            "chunk_index",
+            "text"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "_criterion_type_for",
+          "params": [
+            "title"
+          ],
+          "returnType": "CriterionType",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "_match_header",
+          "params": [
+            "line"
+          ],
+          "returnType": "tuple[str, str] | None",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "_to_lines",
+          "params": [
+            "documents"
+          ],
+          "returnType": "list[_Line]",
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "_to_sections",
+          "params": [
+            "lines"
+          ],
+          "returnType": "list[_Section]",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "_split_criteria",
+          "params": [
+            "section"
+          ],
+          "returnType": "tuple[list[tuple[str, int | None]], list[tuple[str, int | None]]]",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "split_protocol",
+          "params": [
+            "documents",
+            "protocol_id",
+            "source_filename",
+            "chunk_size",
+            "chunk_overlap"
+          ],
+          "returnType": "list[Document]",
+          "exported": true,
+          "lineCount": 42
+        }
+      ],
+      "classes": [
+        {
+          "name": "_Line",
+          "methods": [],
+          "properties": [
+            "text",
+            "page"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "_Section",
+          "methods": [
+            "has_body",
+            "first_page"
+          ],
+          "properties": [
+            "title",
+            "criterion_type",
+            "lines",
+            "starts_with_header"
+          ],
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "imports": [
+        {
+          "source": "hashlib",
+          "specifiers": [
+            "hashlib"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "collections.abc",
+          "specifiers": [
+            "Sequence"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass",
+            "field"
+          ]
+        },
+        {
+          "source": "langchain_core.documents",
+          "specifiers": [
+            "Document"
+          ]
+        },
+        {
+          "source": "langchain_text_splitters",
+          "specifiers": [
+            "RecursiveCharacterTextSplitter"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "CriterionType"
+          ]
+        }
+      ],
+      "exports": [
+        "_Line",
+        "_Section",
+        "build_text_splitter",
+        "strip_context_prefix",
+        "make_chunk_id",
+        "_criterion_type_for",
+        "_match_header",
+        "_to_lines",
+        "_to_sections",
+        "_split_criteria",
+        "split_protocol"
+      ],
+      "totalLines": 203,
+      "hasStructuralAnalysis": true
+    },
+    "src/rag/__init__.py": {
+      "filePath": "src/rag/__init__.py",
+      "contentHash": "013d527e3f2d1df15fb5f0d6f404b659c8350d8b2a24207566d12c5642d01a1a",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 2,
+      "hasStructuralAnalysis": true
+    },
+    "src/rag/chain.py": {
+      "filePath": "src/rag/chain.py",
+      "contentHash": "20c3b9c7edf1ccae2cb10814b267a5689b7b1dccd95f0849f98882a7b0d94123",
+      "functions": [
+        {
+          "name": "_batched",
+          "params": [
+            "items",
+            "size"
+          ],
+          "returnType": "Iterator[list[T]]",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "aggregate_screening",
+          "params": [
+            "criteria"
+          ],
+          "returnType": "tuple[EligibilityStatus, list[str], list[str]]",
+          "exported": true,
+          "lineCount": 17
+        },
+        {
+          "name": "render_assessment",
+          "params": [
+            "status",
+            "rationale",
+            "citations",
+            "safety_concerns"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [
+        {
+          "name": "RetrievalResult",
+          "methods": [],
+          "properties": [
+            "chunks",
+            "top_relevance",
+            "mode",
+            "code_match"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "ProtocolNotFoundError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "NoCriteriaError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "LLMNotConfiguredError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "LLMInvocationError",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "EligibilityRAGChain",
+          "methods": [
+            "__init__",
+            "_require_llm",
+            "_invoke_structured",
+            "_audit",
+            "retrieve",
+            "query",
+            "screen",
+            "_log"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 250
+        }
+      ],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "time",
+          "specifiers": [
+            "time"
+          ]
+        },
+        {
+          "source": "collections.abc",
+          "specifiers": [
+            "Iterable",
+            "Iterator",
+            "Sequence"
+          ]
+        },
+        {
+          "source": "dataclasses",
+          "specifiers": [
+            "dataclass"
+          ]
+        },
+        {
+          "source": "itertools",
+          "specifiers": [
+            "islice"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "TypeVar"
+          ]
+        },
+        {
+          "source": "langchain_chroma",
+          "specifiers": [
+            "Chroma"
+          ]
+        },
+        {
+          "source": "langchain_core.documents",
+          "specifiers": [
+            "Document"
+          ]
+        },
+        {
+          "source": "langchain_core.language_models",
+          "specifiers": [
+            "BaseChatModel"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "Settings"
+          ]
+        },
+        {
+          "source": "src.ingestion.indexer",
+          "specifiers": [
+            "ProtocolIndexer"
+          ]
+        },
+        {
+          "source": "src.ingestion.splitter",
+          "specifiers": [
+            "strip_context_prefix"
+          ]
+        },
+        {
+          "source": "src.rag.guardrails",
+          "specifiers": [
+            "MIN_PATIENT_EVIDENCE_CHARS",
+            "evidence_mentions_criterion",
+            "hash_for_log",
+            "sanitize_context",
+            "sha256_hex",
+            "verify_quote"
+          ]
+        },
+        {
+          "source": "src.rag.hybrid",
+          "specifiers": [
+            "BM25",
+            "code_terms",
+            "reciprocal_rank_fusion"
+          ]
+        },
+        {
+          "source": "src.rag.prompt_templates",
+          "specifiers": [
+            "INSUFFICIENT_CONTEXT_RESPONSE",
+            "QA_PROMPT",
+            "QA_PROMPT_VERSION",
+            "SCREENING_PROMPT",
+            "SCREENING_PROMPT_VERSION",
+            "criterion_labels",
+            "format_context",
+            "format_criteria"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "AuditInfo",
+            "CitationSource",
+            "CriterionAssessment",
+            "CriterionType",
+            "CriterionVerdictValue",
+            "EligibilityQueryRequest",
+            "EligibilityQueryResponse",
+            "EligibilityStatus",
+            "LLMAssessment",
+            "LLMCriterionVerdict",
+            "LLMScreeningAssessment",
+            "PatientScreeningRequest",
+            "ScreeningResponse"
+          ]
+        }
+      ],
+      "exports": [
+        "RetrievalResult",
+        "ProtocolNotFoundError",
+        "NoCriteriaError",
+        "LLMNotConfiguredError",
+        "LLMInvocationError",
+        "_batched",
+        "aggregate_screening",
+        "render_assessment",
+        "EligibilityRAGChain"
+      ],
+      "totalLines": 381,
+      "hasStructuralAnalysis": true
+    },
+    "src/rag/embeddings.py": {
+      "filePath": "src/rag/embeddings.py",
+      "contentHash": "bf6f086e598e35564c67e3edaf90a26941f2a56617547a2c0d332b9f94322e32",
+      "functions": [
+        {
+          "name": "get_embeddings",
+          "params": [],
+          "returnType": "Embeddings",
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "logging",
+          "specifiers": [
+            "logging"
+          ]
+        },
+        {
+          "source": "functools",
+          "specifiers": [
+            "lru_cache"
+          ]
+        },
+        {
+          "source": "langchain_core.embeddings",
+          "specifiers": [
+            "Embeddings"
+          ]
+        },
+        {
+          "source": "langchain_huggingface",
+          "specifiers": [
+            "HuggingFaceEmbeddings"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "get_settings"
+          ]
+        }
+      ],
+      "exports": [
+        "get_embeddings"
+      ],
+      "totalLines": 24,
+      "hasStructuralAnalysis": true
+    },
+    "src/rag/guardrails.py": {
+      "filePath": "src/rag/guardrails.py",
+      "contentHash": "b4750702e20f5e0627440e3049648c19def044bb0ef47a9b552ea5bf12b78532",
+      "functions": [
+        {
+          "name": "sanitize_context",
+          "params": [
+            "text"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "normalize_text",
+          "params": [
+            "text"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "verify_quote",
+          "params": [
+            "quote",
+            "source",
+            "min_chars"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 18
+        },
+        {
+          "name": "_content_terms",
+          "params": [
+            "text"
+          ],
+          "returnType": "set[str]",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "evidence_mentions_criterion",
+          "params": [
+            "evidence",
+            "criterion"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "sha256_hex",
+          "params": [
+            "text"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "hash_for_log",
+          "params": [
+            "text"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "hashlib",
+          "specifiers": [
+            "hashlib"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "unicodedata",
+          "specifiers": [
+            "unicodedata"
+          ]
+        }
+      ],
+      "exports": [
+        "sanitize_context",
+        "normalize_text",
+        "verify_quote",
+        "_content_terms",
+        "evidence_mentions_criterion",
+        "sha256_hex",
+        "hash_for_log"
+      ],
+      "totalLines": 89,
+      "hasStructuralAnalysis": true
+    },
+    "src/rag/hybrid.py": {
+      "filePath": "src/rag/hybrid.py",
+      "contentHash": "fb946b24e7272a71f4da30997291a62b1972d0d3ced1a4714c6c5d40741722a5",
+      "functions": [
+        {
+          "name": "tokenize",
+          "params": [
+            "text"
+          ],
+          "returnType": "list[str]",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "code_terms",
+          "params": [
+            "query"
+          ],
+          "returnType": "list[str]",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "reciprocal_rank_fusion",
+          "params": [
+            "rankings",
+            "k"
+          ],
+          "returnType": "list[str]",
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "classes": [
+        {
+          "name": "BM25",
+          "methods": [
+            "__init__",
+            "contains_any",
+            "scores",
+            "rank"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 39
+        }
+      ],
+      "imports": [
+        {
+          "source": "math",
+          "specifiers": [
+            "math"
+          ]
+        },
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "collections",
+          "specifiers": [
+            "Counter"
+          ]
+        },
+        {
+          "source": "collections.abc",
+          "specifiers": [
+            "Sequence"
+          ]
+        }
+      ],
+      "exports": [
+        "tokenize",
+        "code_terms",
+        "BM25",
+        "reciprocal_rank_fusion"
+      ],
+      "totalLines": 92,
+      "hasStructuralAnalysis": true
+    },
+    "src/rag/prompt_templates.py": {
+      "filePath": "src/rag/prompt_templates.py",
+      "contentHash": "6b884042c5f514ea9c5ed4dae28d5a9ecce0a0e2d1aae858bdca65288b6602ab",
+      "functions": [
+        {
+          "name": "format_context",
+          "params": [
+            "chunks"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "criterion_labels",
+          "params": [
+            "criteria"
+          ],
+          "returnType": "dict[str, str]",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "format_criteria",
+          "params": [
+            "criteria",
+            "labels"
+          ],
+          "returnType": "str",
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "collections.abc",
+          "specifiers": [
+            "Sequence"
+          ]
+        },
+        {
+          "source": "langchain_core.documents",
+          "specifiers": [
+            "Document"
+          ]
+        },
+        {
+          "source": "langchain_core.prompts",
+          "specifiers": [
+            "ChatPromptTemplate"
+          ]
+        },
+        {
+          "source": "src.ingestion.splitter",
+          "specifiers": [
+            "strip_context_prefix"
+          ]
+        },
+        {
+          "source": "src.rag.guardrails",
+          "specifiers": [
+            "sanitize_context"
+          ]
+        }
+      ],
+      "exports": [
+        "format_context",
+        "criterion_labels",
+        "format_criteria"
+      ],
+      "totalLines": 129,
+      "hasStructuralAnalysis": true
+    },
+    "src/schemas.py": {
+      "filePath": "src/schemas.py",
+      "contentHash": "da79245bcb51ae3e351be568fead8d90845cb4a1200342a06d41f12188db309c",
+      "functions": [],
+      "classes": [
+        {
+          "name": "EligibilityStatus",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "CriterionType",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "CriterionVerdictValue",
+          "methods": [],
+          "properties": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "EligibilityQueryRequest",
+          "methods": [
+            "strip_query"
+          ],
+          "properties": [
+            "query",
+            "protocol_id",
+            "top_k"
+          ],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "PatientScreeningRequest",
+          "methods": [
+            "strip_summary"
+          ],
+          "properties": [
+            "protocol_id",
+            "patient_summary"
+          ],
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "CitationSource",
+          "methods": [],
+          "properties": [
+            "source_document",
+            "protocol_id",
+            "excerpt",
+            "chunk_id",
+            "section",
+            "criterion_type",
+            "quote",
+            "quote_verified"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "AuditInfo",
+          "methods": [],
+          "properties": [
+            "model",
+            "llm_provider",
+            "prompt_version",
+            "retrieval_mode",
+            "retrieved_chunk_ids",
+            "context_hash",
+            "llm_called",
+            "timestamp"
+          ],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "EligibilityQueryResponse",
+          "methods": [],
+          "properties": [
+            "protocol_id",
+            "query",
+            "status",
+            "assessment",
+            "citations",
+            "is_grounded",
+            "safety_concerns",
+            "audit"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "ProtocolUploadResponse",
+          "methods": [],
+          "properties": [
+            "message",
+            "protocol_id",
+            "source_filename",
+            "chunks_indexed",
+            "criteria_indexed",
+            "replaced_existing"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "CriterionAssessment",
+          "methods": [],
+          "properties": [
+            "chunk_id",
+            "criterion_type",
+            "criterion_text",
+            "verdict",
+            "patient_evidence",
+            "evidence_verified",
+            "rationale"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "ScreeningResponse",
+          "methods": [],
+          "properties": [
+            "protocol_id",
+            "status",
+            "summary",
+            "criteria",
+            "failing_criteria",
+            "unresolved_criteria",
+            "is_grounded",
+            "audit"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "ProtocolSummary",
+          "methods": [],
+          "properties": [
+            "protocol_id",
+            "source_documents",
+            "chunk_count"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "EvidenceItem",
+          "methods": [],
+          "properties": [
+            "chunk_id",
+            "quote",
+            "explanation"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "LLMAssessment",
+          "methods": [],
+          "properties": [
+            "status",
+            "evidence",
+            "safety_concerns",
+            "rationale"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "LLMCriterionVerdict",
+          "methods": [],
+          "properties": [
+            "criterion_id",
+            "verdict",
+            "patient_evidence",
+            "rationale"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "LLMScreeningAssessment",
+          "methods": [],
+          "properties": [
+            "verdicts"
+          ],
+          "exported": true,
+          "lineCount": 2
+        }
+      ],
+      "imports": [
+        {
+          "source": "datetime",
+          "specifiers": [
+            "UTC",
+            "datetime"
+          ]
+        },
+        {
+          "source": "enum",
+          "specifiers": [
+            "StrEnum"
+          ]
+        },
+        {
+          "source": "typing",
+          "specifiers": [
+            "Annotated"
+          ]
+        },
+        {
+          "source": "pydantic",
+          "specifiers": [
+            "BaseModel",
+            "ConfigDict",
+            "Field",
+            "StringConstraints",
+            "field_validator"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "get_settings"
+          ]
+        }
+      ],
+      "exports": [
+        "EligibilityStatus",
+        "CriterionType",
+        "CriterionVerdictValue",
+        "EligibilityQueryRequest",
+        "PatientScreeningRequest",
+        "CitationSource",
+        "AuditInfo",
+        "EligibilityQueryResponse",
+        "ProtocolUploadResponse",
+        "CriterionAssessment",
+        "ScreeningResponse",
+        "ProtocolSummary",
+        "EvidenceItem",
+        "LLMAssessment",
+        "LLMCriterionVerdict",
+        "LLMScreeningAssessment"
+      ],
+      "totalLines": 180,
+      "hasStructuralAnalysis": true
+    },
+    "tests/__init__.py": {
+      "filePath": "tests/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "tests/conftest.py": {
+      "filePath": "tests/conftest.py",
+      "contentHash": "3eca3ec4f9d8193fe50723a4f24ce4bfdc7847791f6610a819ef4f09882cc072",
+      "functions": [
+        {
+          "name": "settings",
+          "params": [
+            "tmp_path"
+          ],
+          "returnType": "Settings",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "vector_store",
+          "params": [
+            "settings"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "indexer",
+          "params": [
+            "vector_store"
+          ],
+          "returnType": "ProtocolIndexer",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "fake_llm",
+          "params": [],
+          "returnType": "FakeStructuredLLM",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "make_chain",
+          "params": [
+            "vector_store",
+            "indexer",
+            "settings"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "client",
+          "params": [
+            "settings",
+            "vector_store",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "make_pdf",
+          "params": [
+            "lines"
+          ],
+          "returnType": "bytes",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "upload",
+          "params": [
+            "client",
+            "path",
+            "protocol_id",
+            "filename"
+          ],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "classes": [
+        {
+          "name": "FakeStructuredLLM",
+          "methods": [
+            "__init__",
+            "call_count",
+            "with_structured_output",
+            "_respond"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 53
+        }
+      ],
+      "imports": [
+        {
+          "source": "re",
+          "specifiers": [
+            "re"
+          ]
+        },
+        {
+          "source": "uuid",
+          "specifiers": [
+            "uuid"
+          ]
+        },
+        {
+          "source": "collections.abc",
+          "specifiers": [
+            "Callable"
+          ]
+        },
+        {
+          "source": "pathlib",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "pytest",
+          "specifiers": [
+            "pytest"
+          ]
+        },
+        {
+          "source": "fastapi.testclient",
+          "specifiers": [
+            "TestClient"
+          ]
+        },
+        {
+          "source": "langchain_core.embeddings",
+          "specifiers": [
+            "DeterministicFakeEmbedding"
+          ]
+        },
+        {
+          "source": "langchain_core.runnables",
+          "specifiers": [
+            "RunnableLambda"
+          ]
+        },
+        {
+          "source": "app",
+          "specifiers": [
+            "app"
+          ]
+        },
+        {
+          "source": "src.api.dependencies",
+          "specifiers": [
+            "get_llm",
+            "get_vector_store"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "Settings",
+            "get_settings"
+          ]
+        },
+        {
+          "source": "src.ingestion.indexer",
+          "specifiers": [
+            "ProtocolIndexer",
+            "build_vector_store"
+          ]
+        },
+        {
+          "source": "src.rag.chain",
+          "specifiers": [
+            "EligibilityRAGChain"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "CriterionVerdictValue",
+            "EligibilityStatus",
+            "EvidenceItem",
+            "LLMAssessment",
+            "LLMCriterionVerdict",
+            "LLMScreeningAssessment"
+          ]
+        }
+      ],
+      "exports": [
+        "FakeStructuredLLM",
+        "settings",
+        "vector_store",
+        "indexer",
+        "fake_llm",
+        "make_chain",
+        "client",
+        "make_pdf",
+        "upload"
+      ],
+      "totalLines": 167,
+      "hasStructuralAnalysis": true
+    },
+    "tests/integration/__init__.py": {
+      "filePath": "tests/integration/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "tests/integration/test_endpoints.py": {
+      "filePath": "tests/integration/test_endpoints.py",
+      "contentHash": "d19ec7d6083caa5986382fbd82a13e521db22e7ca52f06eb3260d39d59613ee7",
+      "functions": [
+        {
+          "name": "test_health",
+          "params": [
+            "client"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_index_protocol",
+          "params": [
+            "client",
+            "settings"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "test_reindexing_replaces_instead_of_duplicating",
+          "params": [
+            "client"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_index_rejects_invalid_protocol_id",
+          "params": [
+            "client",
+            "protocol_id"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "_post_file",
+          "params": [
+            "client",
+            "name",
+            "content",
+            "protocol_id"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_index_rejects_unsupported_and_fake_pdf",
+          "params": [
+            "client"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_index_rejects_empty_and_oversized_files",
+          "params": [
+            "client",
+            "settings"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_upload_filename_cannot_escape_upload_dir",
+          "params": [
+            "client",
+            "settings",
+            "tmp_path"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_query_returns_grounded_response",
+          "params": [
+            "client",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "test_query_validation_and_unknown_protocol",
+          "params": [
+            "client"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_no_cross_trial_contamination",
+          "params": [
+            "client",
+            "fake_llm",
+            "vector_store"
+          ],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "test_query_without_llm_returns_503",
+          "params": [
+            "client"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_abstention_through_the_api",
+          "params": [
+            "client",
+            "settings",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_screen_patient",
+          "params": [
+            "client",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "test_prompt_injection_text_cannot_break_out_of_context",
+          "params": [
+            "client",
+            "fake_llm",
+            "tmp_path"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "test_list_and_delete_protocols",
+          "params": [
+            "client"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_real_pdf_is_indexed_with_page_numbers",
+          "params": [
+            "client",
+            "vector_store"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_corrupt_pdf_returns_422_and_leaves_no_file",
+          "params": [
+            "client",
+            "tmp_path"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_non_utf8_text_is_decoded",
+          "params": [
+            "client",
+            "vector_store"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_failed_reindex_keeps_previous_version",
+          "params": [
+            "client",
+            "tmp_path"
+          ],
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "io",
+          "specifiers": [
+            "io"
+          ]
+        },
+        {
+          "source": "pytest",
+          "specifiers": [
+            "pytest"
+          ]
+        },
+        {
+          "source": "src.api.dependencies",
+          "specifiers": [
+            "get_llm"
+          ]
+        },
+        {
+          "source": "src.rag.prompt_templates",
+          "specifiers": [
+            "INSUFFICIENT_CONTEXT_RESPONSE"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "CriterionVerdictValue"
+          ]
+        },
+        {
+          "source": "tests.conftest",
+          "specifiers": [
+            "NSCLC_ID",
+            "NSCLC_PROTOCOL",
+            "T2D_ID",
+            "T2D_PROTOCOL",
+            "make_pdf",
+            "upload"
+          ]
+        }
+      ],
+      "exports": [
+        "test_health",
+        "test_index_protocol",
+        "test_reindexing_replaces_instead_of_duplicating",
+        "test_index_rejects_invalid_protocol_id",
+        "_post_file",
+        "test_index_rejects_unsupported_and_fake_pdf",
+        "test_index_rejects_empty_and_oversized_files",
+        "test_upload_filename_cannot_escape_upload_dir",
+        "test_query_returns_grounded_response",
+        "test_query_validation_and_unknown_protocol",
+        "test_no_cross_trial_contamination",
+        "test_query_without_llm_returns_503",
+        "test_abstention_through_the_api",
+        "test_screen_patient",
+        "test_prompt_injection_text_cannot_break_out_of_context",
+        "test_list_and_delete_protocols",
+        "test_real_pdf_is_indexed_with_page_numbers",
+        "test_corrupt_pdf_returns_422_and_leaves_no_file",
+        "test_non_utf8_text_is_decoded",
+        "test_failed_reindex_keeps_previous_version"
+      ],
+      "totalLines": 191,
+      "hasStructuralAnalysis": true
+    },
+    "tests/integration/test_real_embeddings.py": {
+      "filePath": "tests/integration/test_real_embeddings.py",
+      "contentHash": "266e768ddff10edf50e29ca42708ebc78b5e85bb5ba75b3b63238f3a62ff4466",
+      "functions": [
+        {
+          "name": "real_chain",
+          "params": [
+            "tmp_path_factory"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "test_kidney_question_retrieves_egfr_exclusion",
+          "params": [
+            "real_chain"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_off_topic_question_abstains_without_llm",
+          "params": [
+            "real_chain"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_short_acronym_query_passes_the_gate_via_exact_match",
+          "params": [
+            "real_chain"
+          ],
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "pytest",
+          "specifiers": [
+            "pytest"
+          ]
+        },
+        {
+          "source": "src.ingestion.indexer",
+          "specifiers": [
+            "ProtocolIndexer",
+            "build_vector_store"
+          ]
+        },
+        {
+          "source": "src.ingestion.parser",
+          "specifiers": [
+            "load_document"
+          ]
+        },
+        {
+          "source": "src.ingestion.splitter",
+          "specifiers": [
+            "split_protocol"
+          ]
+        },
+        {
+          "source": "src.rag.chain",
+          "specifiers": [
+            "EligibilityRAGChain"
+          ]
+        },
+        {
+          "source": "src.rag.embeddings",
+          "specifiers": [
+            "get_embeddings"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "EligibilityQueryRequest",
+            "EligibilityStatus"
+          ]
+        },
+        {
+          "source": "tests.conftest",
+          "specifiers": [
+            "NSCLC_ID",
+            "NSCLC_PROTOCOL",
+            "T2D_ID",
+            "T2D_PROTOCOL"
+          ]
+        }
+      ],
+      "exports": [
+        "real_chain",
+        "test_kidney_question_retrieves_egfr_exclusion",
+        "test_off_topic_question_abstains_without_llm",
+        "test_short_acronym_query_passes_the_gate_via_exact_match"
+      ],
+      "totalLines": 44,
+      "hasStructuralAnalysis": true
+    },
+    "tests/unit/__init__.py": {
+      "filePath": "tests/unit/__init__.py",
+      "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 1,
+      "hasStructuralAnalysis": true
+    },
+    "tests/unit/test_chain.py": {
+      "filePath": "tests/unit/test_chain.py",
+      "contentHash": "2b94e8a42999f656214b2f79d09feec8812e743c46a3c779a25d094bc96f1910",
+      "functions": [
+        {
+          "name": "indexed",
+          "params": [
+            "indexer"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "_request",
+          "params": [
+            "query",
+            "top_k"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_abstains_without_calling_llm_when_nothing_is_relevant",
+          "params": [
+            "indexed",
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "test_abstention_works_without_an_llm",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_missing_llm_raises_when_an_answer_is_needed",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_grounded_answer_has_verified_citations",
+          "params": [
+            "indexed",
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "test_fabricated_quote_downgrades_to_indeterminate",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "test_citing_a_chunk_that_was_not_retrieved_is_not_grounded",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "test_model_abstention_returns_the_exact_sentence",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "test_unknown_protocol_raises",
+          "params": [
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_llm_errors_are_wrapped",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "_assessment",
+          "params": [
+            "kind",
+            "verdict",
+            "cid"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_aggregate_screening_rules",
+          "params": [
+            "verdicts",
+            "expected"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_screening_flags_met_exclusion",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "test_screening_downgrades_unverified_patient_evidence",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_screening_batches_and_fills_missing_verdicts",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_screening_requires_criteria",
+          "params": [
+            "indexer",
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "nsclc_indexed",
+          "params": [
+            "indexer"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_hybrid_puts_exact_keyword_match_first",
+          "params": [
+            "nsclc_indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_code_in_protocol_passes_the_gate_only_in_hybrid_mode",
+          "params": [
+            "indexed",
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_off_topic_query_still_abstains_in_hybrid_mode",
+          "params": [
+            "indexed",
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_dense_mode_matches_previous_behaviour",
+          "params": [
+            "indexed",
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_llm_never_sees_the_embedding_prefix",
+          "params": [
+            "indexed",
+            "make_chain",
+            "fake_llm"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_prompts_render_with_literal_json_braces",
+          "params": [],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_screening_uses_short_labels_and_maps_them_back",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "test_screening_downgrades_unrelated_evidence",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_short_patient_facts_count_as_evidence",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_query_never_confirms_eligibility",
+          "params": [
+            "indexed",
+            "make_chain"
+          ],
+          "exported": true,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "pytest",
+          "specifiers": [
+            "pytest"
+          ]
+        },
+        {
+          "source": "src.ingestion.parser",
+          "specifiers": [
+            "load_document"
+          ]
+        },
+        {
+          "source": "src.ingestion.splitter",
+          "specifiers": [
+            "split_protocol"
+          ]
+        },
+        {
+          "source": "src.rag.chain",
+          "specifiers": [
+            "UNVERIFIED_EVIDENCE_CONCERN",
+            "LLMInvocationError",
+            "LLMNotConfiguredError",
+            "NoCriteriaError",
+            "ProtocolNotFoundError",
+            "aggregate_screening"
+          ]
+        },
+        {
+          "source": "src.rag.prompt_templates",
+          "specifiers": [
+            "INSUFFICIENT_CONTEXT_RESPONSE"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "CriterionAssessment",
+            "CriterionType",
+            "CriterionVerdictValue",
+            "EligibilityQueryRequest",
+            "EligibilityStatus",
+            "EvidenceItem",
+            "LLMAssessment",
+            "PatientScreeningRequest"
+          ]
+        },
+        {
+          "source": "tests.conftest",
+          "specifiers": [
+            "T2D_ID",
+            "T2D_PROTOCOL",
+            "FakeStructuredLLM"
+          ]
+        }
+      ],
+      "exports": [
+        "indexed",
+        "_request",
+        "test_abstains_without_calling_llm_when_nothing_is_relevant",
+        "test_abstention_works_without_an_llm",
+        "test_missing_llm_raises_when_an_answer_is_needed",
+        "test_grounded_answer_has_verified_citations",
+        "test_fabricated_quote_downgrades_to_indeterminate",
+        "test_citing_a_chunk_that_was_not_retrieved_is_not_grounded",
+        "test_model_abstention_returns_the_exact_sentence",
+        "test_unknown_protocol_raises",
+        "test_llm_errors_are_wrapped",
+        "_assessment",
+        "test_aggregate_screening_rules",
+        "test_screening_flags_met_exclusion",
+        "test_screening_downgrades_unverified_patient_evidence",
+        "test_screening_batches_and_fills_missing_verdicts",
+        "test_screening_requires_criteria",
+        "nsclc_indexed",
+        "test_hybrid_puts_exact_keyword_match_first",
+        "test_code_in_protocol_passes_the_gate_only_in_hybrid_mode",
+        "test_off_topic_query_still_abstains_in_hybrid_mode",
+        "test_dense_mode_matches_previous_behaviour",
+        "test_llm_never_sees_the_embedding_prefix",
+        "test_prompts_render_with_literal_json_braces",
+        "test_screening_uses_short_labels_and_maps_them_back",
+        "test_screening_downgrades_unrelated_evidence",
+        "test_short_patient_facts_count_as_evidence",
+        "test_query_never_confirms_eligibility"
+      ],
+      "totalLines": 273,
+      "hasStructuralAnalysis": true
+    },
+    "tests/unit/test_dependencies.py": {
+      "filePath": "tests/unit/test_dependencies.py",
+      "contentHash": "5bbb021858cb1385256f7eb90355d6d1b51c528b2efdffa9500d47cb832d37dd",
+      "functions": [
+        {
+          "name": "_settings",
+          "params": [
+            "**overrides"
+          ],
+          "returnType": "Settings",
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_openai_without_key_means_no_llm",
+          "params": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_openai_with_key",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_ollama_needs_no_key_and_bounds_context_and_output",
+          "params": [],
+          "exported": true,
+          "lineCount": 6
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "langchain_ollama",
+          "specifiers": [
+            "ChatOllama"
+          ]
+        },
+        {
+          "source": "langchain_openai",
+          "specifiers": [
+            "ChatOpenAI"
+          ]
+        },
+        {
+          "source": "src.api.dependencies",
+          "specifiers": [
+            "get_llm"
+          ]
+        },
+        {
+          "source": "src.config",
+          "specifiers": [
+            "Settings"
+          ]
+        }
+      ],
+      "exports": [
+        "_settings",
+        "test_openai_without_key_means_no_llm",
+        "test_openai_with_key",
+        "test_ollama_needs_no_key_and_bounds_context_and_output"
+      ],
+      "totalLines": 30,
+      "hasStructuralAnalysis": true
+    },
+    "tests/unit/test_guardrails.py": {
+      "filePath": "tests/unit/test_guardrails.py",
+      "contentHash": "438c86020e3603e4f48e92f6799317aae3155c3e3041446b4f69fef0cb7beb0c",
+      "functions": [
+        {
+          "name": "test_verbatim_quotes_verify",
+          "params": [
+            "quote"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_non_verbatim_quotes_fail",
+          "params": [
+            "quote"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_normalize_text_unifies_characters",
+          "params": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_sanitize_context_removes_delimiter_tags",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_hash_for_log_is_short_and_deterministic",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_our_own_id_markers_are_ignored",
+          "params": [
+            "quote"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_other_bracketed_text_still_fails",
+          "params": [],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_evidence_must_mention_the_criterion",
+          "params": [
+            "evidence",
+            "criterion",
+            "relevant"
+          ],
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "pytest",
+          "specifiers": [
+            "pytest"
+          ]
+        },
+        {
+          "source": "src.rag.guardrails",
+          "specifiers": [
+            "hash_for_log",
+            "normalize_text",
+            "sanitize_context",
+            "verify_quote"
+          ]
+        }
+      ],
+      "exports": [
+        "test_verbatim_quotes_verify",
+        "test_non_verbatim_quotes_fail",
+        "test_normalize_text_unifies_characters",
+        "test_sanitize_context_removes_delimiter_tags",
+        "test_hash_for_log_is_short_and_deterministic",
+        "test_our_own_id_markers_are_ignored",
+        "test_other_bracketed_text_still_fails",
+        "test_evidence_must_mention_the_criterion"
+      ],
+      "totalLines": 85,
+      "hasStructuralAnalysis": true
+    },
+    "tests/unit/test_hybrid.py": {
+      "filePath": "tests/unit/test_hybrid.py",
+      "contentHash": "7393b54f655c3dbc185522b4fc7894e771be540a5344930825c116444915f390",
+      "functions": [
+        {
+          "name": "test_tokenize_lowercases_drops_stopwords_and_stems_plurals",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_code_terms",
+          "params": [
+            "query",
+            "expected"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_bm25_ranks_exact_term_first_and_skips_non_matches",
+          "params": [],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "test_bm25_prefers_rarer_terms",
+          "params": [],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_reciprocal_rank_fusion",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "pytest",
+          "specifiers": [
+            "pytest"
+          ]
+        },
+        {
+          "source": "src.rag.hybrid",
+          "specifiers": [
+            "BM25",
+            "code_terms",
+            "reciprocal_rank_fusion",
+            "tokenize"
+          ]
+        }
+      ],
+      "exports": [
+        "test_tokenize_lowercases_drops_stopwords_and_stems_plurals",
+        "test_code_terms",
+        "test_bm25_ranks_exact_term_first_and_skips_non_matches",
+        "test_bm25_prefers_rarer_terms",
+        "test_reciprocal_rank_fusion"
+      ],
+      "totalLines": 49,
+      "hasStructuralAnalysis": true
+    },
+    "tests/unit/test_schemas.py": {
+      "filePath": "tests/unit/test_schemas.py",
+      "contentHash": "ac3012ad831557b473aa065e35971e17e7b5bb8022cbc4d6c0e1adc6366cc690",
+      "functions": [
+        {
+          "name": "test_valid_request_uses_default_top_k",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_invalid_nct_ids_are_rejected",
+          "params": [
+            "protocol_id"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "test_query_length_is_enforced_after_stripping",
+          "params": [
+            "query"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_query_is_stripped",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_top_k_bounds",
+          "params": [
+            "top_k"
+          ],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_unknown_fields_are_rejected",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_screening_request_requires_meaningful_summary",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_llm_assessment_parses_status_strings",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_upload_response_defaults",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "pytest",
+          "specifiers": [
+            "pytest"
+          ]
+        },
+        {
+          "source": "pydantic",
+          "specifiers": [
+            "ValidationError"
+          ]
+        },
+        {
+          "source": "src.schemas",
+          "specifiers": [
+            "EligibilityQueryRequest",
+            "EligibilityStatus",
+            "LLMAssessment",
+            "PatientScreeningRequest",
+            "ProtocolUploadResponse"
+          ]
+        }
+      ],
+      "exports": [
+        "test_valid_request_uses_default_top_k",
+        "test_invalid_nct_ids_are_rejected",
+        "test_query_length_is_enforced_after_stripping",
+        "test_query_is_stripped",
+        "test_top_k_bounds",
+        "test_unknown_fields_are_rejected",
+        "test_screening_request_requires_meaningful_summary",
+        "test_llm_assessment_parses_status_strings",
+        "test_upload_response_defaults"
+      ],
+      "totalLines": 69,
+      "hasStructuralAnalysis": true
+    },
+    "tests/unit/test_splitter.py": {
+      "filePath": "tests/unit/test_splitter.py",
+      "contentHash": "dafd8f0f439be8d2e5dd44e7ecf405ad2abfd6c7e13ef3460ba4f5f0cac36a76",
+      "functions": [
+        {
+          "name": "_split_text",
+          "params": [
+            "text",
+            "protocol_id",
+            "**kwargs"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "_criteria",
+          "params": [
+            "chunks",
+            "kind"
+          ],
+          "exported": true,
+          "lineCount": 2
+        },
+        {
+          "name": "test_one_chunk_per_criterion_with_correct_labels",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_context_prefix_and_metadata_on_every_chunk",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "test_wrapped_lines_and_sub_items_stay_with_their_criterion",
+          "params": [],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "test_chunk_ids_are_stable_and_unique",
+          "params": [],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_header_only_sections_are_dropped",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "test_long_prose_is_split_within_chunk_size",
+          "params": [],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "test_ctgov_style_bullets_and_numbered_pdf_headers",
+          "params": [],
+          "exported": true,
+          "lineCount": 16
+        },
+        {
+          "name": "test_inline_criteria_after_colon_and_mid_sentence_mentions",
+          "params": [],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "test_prose_eligibility_falls_back_but_keeps_labels",
+          "params": [],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "test_page_numbers_are_kept_for_pdfs",
+          "params": [],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "test_strip_context_prefix",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "langchain_core.documents",
+          "specifiers": [
+            "Document"
+          ]
+        },
+        {
+          "source": "src.ingestion.parser",
+          "specifiers": [
+            "load_document"
+          ]
+        },
+        {
+          "source": "src.ingestion.splitter",
+          "specifiers": [
+            "split_protocol",
+            "strip_context_prefix"
+          ]
+        },
+        {
+          "source": "tests.conftest",
+          "specifiers": [
+            "NSCLC_ID",
+            "NSCLC_PROTOCOL",
+            "T2D_ID",
+            "T2D_PROTOCOL"
+          ]
+        }
+      ],
+      "exports": [
+        "_split_text",
+        "_criteria",
+        "test_one_chunk_per_criterion_with_correct_labels",
+        "test_context_prefix_and_metadata_on_every_chunk",
+        "test_wrapped_lines_and_sub_items_stay_with_their_criterion",
+        "test_chunk_ids_are_stable_and_unique",
+        "test_header_only_sections_are_dropped",
+        "test_long_prose_is_split_within_chunk_size",
+        "test_ctgov_style_bullets_and_numbered_pdf_headers",
+        "test_inline_criteria_after_colon_and_mid_sentence_mentions",
+        "test_prose_eligibility_falls_back_but_keeps_labels",
+        "test_page_numbers_are_kept_for_pdfs",
+        "test_strip_context_prefix"
+      ],
+      "totalLines": 120,
+      "hasStructuralAnalysis": true
+    }
+  }
+}

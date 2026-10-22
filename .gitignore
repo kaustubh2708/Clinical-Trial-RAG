@@ -21,3 +21,7 @@ data/raw_protocols/*
 .idea/
 .vscode/
 .DS_Store
+
+# Understand-Anything scratch (the graph, meta, fingerprints and scan are committed)
+.ua/.trash-*/
+.ua/tmp/

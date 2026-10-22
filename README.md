@@ -8,6 +8,8 @@ Built with FastAPI, LangChain, ChromaDB, sentence-transformers and Pydantic v2. 
 
 > **Decision support only.** Not a validated medical device. A qualified research coordinator makes every enrolment decision. Use public or synthetic protocols and de-identified patient text only.
 
+**New to the codebase?** [`docs/UA_ONBOARDING.md`](docs/UA_ONBOARDING.md) is an onboarding guide generated with [Understand-Anything](https://github.com/Egonex-AI/Understand-Anything) from the knowledge graph in `.ua/` (layers, guided tour, file map, complexity hotspots).
+
 **New to the stack?** [`docs/STUDY_BOOK.md`](docs/STUDY_BOOK.md) is an 18-chapter guide to every concept and file in this repo, from the clinical-trials primer to the code walkthrough, evaluation and interview questions.
 
 ## Design in one paragraph
@@ -261,6 +263,8 @@ src/api/routes.py          endpoints
 eval/                      golden set + harness
 scripts/fetch_ctgov.py     pull real eligibility criteria
 docs/STUDY_BOOK.md         study guide for the whole project
+docs/UA_ONBOARDING.md      onboarding guide generated from the knowledge graph
+.ua/                       Understand-Anything knowledge graph (open with /understand-dashboard)
 .github/workflows/ci.yml   CI pipeline
 pyproject.toml             ruff, mypy and pytest configuration
 ```
