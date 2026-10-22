@@ -19,11 +19,18 @@ class Settings(BaseSettings):
 
     # Models
     EMBEDDING_MODEL_NAME: str = "sentence-transformers/all-MiniLM-L6-v2"
+    # "openai" needs OPENAI_API_KEY; "ollama" runs a local model (e.g. LLM_MODEL_NAME=qwen2.5:7b) and needs no key.
+    LLM_PROVIDER: Literal["openai", "ollama"] = "openai"
     LLM_MODEL_NAME: str = "gpt-4o-mini"
     LLM_TEMPERATURE: float = Field(default=0.0, ge=0.0, le=2.0)
     LLM_SEED: int = 42
     LLM_TIMEOUT_SECONDS: float = 60.0
+    # Hard cap on generated tokens: a runaway generation fails fast instead of holding a worker until timeout.
+    LLM_MAX_OUTPUT_TOKENS: int = Field(default=2048, ge=256)
     OPENAI_API_KEY: SecretStr | None = None
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    # Set explicitly: Ollama truncates prompts longer than its context window, silently losing part of them.
+    OLLAMA_NUM_CTX: int = Field(default=8192, ge=2048)
 
     # Chunking
     CHUNK_SIZE: int = Field(default=700, ge=100)

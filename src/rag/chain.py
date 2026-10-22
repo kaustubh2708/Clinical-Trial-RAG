@@ -14,7 +14,14 @@ from langchain_core.language_models import BaseChatModel
 from src.config import Settings
 from src.ingestion.indexer import ProtocolIndexer
 from src.ingestion.splitter import strip_context_prefix
-from src.rag.guardrails import hash_for_log, sanitize_context, sha256_hex, verify_quote
+from src.rag.guardrails import (
+    MIN_PATIENT_EVIDENCE_CHARS,
+    evidence_mentions_criterion,
+    hash_for_log,
+    sanitize_context,
+    sha256_hex,
+    verify_quote,
+)
 from src.rag.hybrid import BM25, code_terms, reciprocal_rank_fusion
 from src.rag.prompt_templates import (
     INSUFFICIENT_CONTEXT_RESPONSE,
@@ -22,6 +29,7 @@ from src.rag.prompt_templates import (
     QA_PROMPT_VERSION,
     SCREENING_PROMPT,
     SCREENING_PROMPT_VERSION,
+    criterion_labels,
     format_context,
     format_criteria,
 )
@@ -45,6 +53,10 @@ logger = logging.getLogger(__name__)
 
 T = TypeVar("T")
 
+QA_CANNOT_CONFIRM_ELIGIBILITY = (
+    "A single question checks only the retrieved criteria, so it can rule a patient out but never in. "
+    "ELIGIBLE was downgraded to INDETERMINATE; use /protocols/screen to check every criterion."
+)
 UNVERIFIED_EVIDENCE_CONCERN = (
     "Model evidence could not be verified verbatim against the protocol text; the status was downgraded to "
     "INDETERMINATE. Review the protocol manually."
@@ -127,7 +139,9 @@ class EligibilityRAGChain:
 
     def _require_llm(self) -> BaseChatModel:
         if self.llm is None:
-            raise LLMNotConfiguredError("No LLM configured. Set OPENAI_API_KEY to enable assessments.")
+            raise LLMNotConfiguredError(
+                "No LLM configured. Set OPENAI_API_KEY, or LLM_PROVIDER=ollama for a local model."
+            )
         return self.llm
 
     def _invoke_structured(self, prompt, schema, variables: dict):
@@ -146,6 +160,7 @@ class EligibilityRAGChain:
                retrieval_mode: str | None = None) -> AuditInfo:
         return AuditInfo(
             model=self.settings.LLM_MODEL_NAME,
+            llm_provider=self.settings.LLM_PROVIDER,
             prompt_version=prompt_version,
             retrieval_mode=retrieval_mode,
             retrieved_chunk_ids=chunk_ids,
@@ -255,6 +270,10 @@ class EligibilityRAGChain:
             if not is_grounded and status in (EligibilityStatus.ELIGIBLE, EligibilityStatus.NOT_ELIGIBLE):
                 status = EligibilityStatus.INDETERMINATE
                 safety_concerns.append(UNVERIFIED_EVIDENCE_CONCERN)
+            elif status is EligibilityStatus.ELIGIBLE:
+                # Top-k retrieval never sees every criterion; only screening can confirm eligibility.
+                status = EligibilityStatus.INDETERMINATE
+                safety_concerns.append(QA_CANNOT_CONFIRM_ELIGIBILITY)
 
         response = EligibilityQueryResponse(
             protocol_id=request.protocol_id,
@@ -281,18 +300,23 @@ class EligibilityRAGChain:
             raise NoCriteriaError(request.protocol_id)
 
         patient_summary = sanitize_context(request.patient_summary)
-        verdicts: dict[str, LLMCriterionVerdict] = {}
+        labels = criterion_labels(criteria)
+        chunk_id_for = {label: chunk_id for chunk_id, label in labels.items()}
+        verdicts: dict[str, LLMCriterionVerdict] = {}  # keyed by chunk_id
         contexts = []
         for batch in _batched(criteria, self.settings.MAX_SCREENING_CRITERIA):
-            criteria_block = format_criteria(batch)
+            criteria_block = format_criteria(batch, labels)
             contexts.append(criteria_block)
             output: LLMScreeningAssessment = self._invoke_structured(
                 SCREENING_PROMPT,
                 LLMScreeningAssessment,
                 {"protocol_id": request.protocol_id, "criteria": criteria_block, "patient_summary": patient_summary},
             )
+            batch_ids = {c.metadata["chunk_id"] for c in batch}
             for item in output.verdicts:
-                verdicts.setdefault(item.criterion_id, item)  # first verdict wins; unknown ids are ignored
+                chunk_id = chunk_id_for.get(item.criterion_id.strip().upper())
+                if chunk_id is not None and chunk_id in batch_ids:  # unknown or other-batch labels are ignored
+                    verdicts.setdefault(chunk_id, item)  # first verdict wins
 
         assessments: list[CriterionAssessment] = []
         is_grounded = True
@@ -311,11 +335,17 @@ class EligibilityRAGChain:
 
             value, rationale, evidence_verified = verdict.verdict, verdict.rationale, False
             if value is not CriterionVerdictValue.INSUFFICIENT_INFO:
-                evidence_verified = verify_quote(verdict.patient_evidence, request.patient_summary)
+                evidence_verified = verify_quote(verdict.patient_evidence, request.patient_summary,
+                                                 min_chars=MIN_PATIENT_EVIDENCE_CHARS)
                 if not evidence_verified:
                     is_grounded = False
                     value = CriterionVerdictValue.INSUFFICIENT_INFO
                     rationale = f"[Downgraded: patient evidence not found verbatim in the summary] {rationale}"
+                elif not evidence_mentions_criterion(verdict.patient_evidence, text):
+                    is_grounded = False
+                    evidence_verified = False
+                    value = CriterionVerdictValue.INSUFFICIENT_INFO
+                    rationale = f"[Downgraded: patient evidence does not mention this criterion] {rationale}"
             assessments.append(CriterionAssessment(
                 chunk_id=meta["chunk_id"], criterion_type=meta["criterion_type"], criterion_text=text,
                 verdict=value, patient_evidence=verdict.patient_evidence or None,

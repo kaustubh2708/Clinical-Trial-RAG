@@ -72,7 +72,12 @@ def ready(settings: Settings = Depends(get_settings)) -> JSONResponse:
     except Exception as exc:  # surface as 503 so orchestrators stop routing traffic here
         logger.exception("Readiness check failed")
         return JSONResponse(status_code=503, content={"status": "not_ready", "error": type(exc).__name__})
-    return JSONResponse(content={"status": "ready", "llm_configured": get_llm(settings) is not None})
+    return JSONResponse(content={
+        "status": "ready",
+        "llm_provider": settings.LLM_PROVIDER,
+        "llm_model": settings.LLM_MODEL_NAME,
+        "llm_configured": get_llm(settings) is not None,
+    })
 
 
 @router.post("/protocols/index", response_model=ProtocolUploadResponse, status_code=status.HTTP_201_CREATED)

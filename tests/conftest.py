@@ -29,8 +29,8 @@ T2D_PROTOCOL = SAMPLE_DIR / "NCT90000001_t2d_protocol.txt"
 NSCLC_PROTOCOL = SAMPLE_DIR / "NCT90000002_nsclc_protocol.txt"
 T2D_ID, NSCLC_ID = "NCT90000001", "NCT90000002"
 
-_CHUNK_BLOCK = re.compile(r'<chunk id="(?P<id>\w+)"[^>]*>\n\[[^\]]*\]\n(?P<text>.*?)\n</chunk>', re.DOTALL)
-_CRITERION_BLOCK = re.compile(r'<criterion id="(?P<id>\w+)" type="(?P<type>\w+)">\n\[[^\]]*\]\n(?P<text>.*?)\n</criterion>', re.DOTALL)
+_CHUNK_BLOCK = re.compile(r'<chunk id="(?P<id>\w+)"[^>]*>\n(?P<text>.*?)\n</chunk>', re.DOTALL)
+_CRITERION_BLOCK = re.compile(r'<criterion id="(?P<id>\w+)" type="(?P<type>\w+)">\n(?P<text>.*?)\n</criterion>', re.DOTALL)
 
 
 class FakeStructuredLLM:

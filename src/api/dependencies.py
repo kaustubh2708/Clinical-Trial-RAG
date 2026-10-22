@@ -23,15 +23,38 @@ def get_vector_store(settings: Settings = Depends(get_settings)) -> Chroma:
 
 
 @lru_cache
-def _cached_llm(model: str, temperature: float, seed: int, timeout: float, api_key: str) -> BaseChatModel:
+def _cached_llm(model: str, temperature: float, seed: int, timeout: float, max_tokens: int,
+                api_key: str) -> BaseChatModel:
     from langchain_openai import ChatOpenAI  # imported lazily so the service starts without the OpenAI stack
 
     return ChatOpenAI(model=model, temperature=temperature, seed=seed, timeout=timeout, max_retries=2,
-                      api_key=SecretStr(api_key))
+                      max_completion_tokens=max_tokens, api_key=SecretStr(api_key))
+
+
+@lru_cache
+def _cached_ollama(model: str, temperature: float, seed: int, timeout: float, max_tokens: int, base_url: str,
+                   num_ctx: int) -> BaseChatModel:
+    from langchain_ollama import ChatOllama  # imported lazily, like ChatOpenAI
+
+    return ChatOllama(model=model, temperature=temperature, seed=seed, base_url=base_url, num_ctx=num_ctx,
+                      num_predict=max_tokens, client_kwargs={"timeout": timeout})
 
 
 def get_llm(settings: Settings = Depends(get_settings)) -> BaseChatModel | None:
-    """The only place the LLM provider is chosen. Returns None when no key is set (indexing still works)."""
+    """The only place the LLM provider is chosen.
+
+    Returns None for OpenAI without a key, so indexing and abstentions still work without an LLM.
+    """
+    if settings.LLM_PROVIDER == "ollama":
+        return _cached_ollama(
+            settings.LLM_MODEL_NAME,
+            settings.LLM_TEMPERATURE,
+            settings.LLM_SEED,
+            settings.LLM_TIMEOUT_SECONDS,
+            settings.LLM_MAX_OUTPUT_TOKENS,
+            settings.OLLAMA_BASE_URL,
+            settings.OLLAMA_NUM_CTX,
+        )
     if settings.OPENAI_API_KEY is None or not settings.OPENAI_API_KEY.get_secret_value():
         return None
     return _cached_llm(
@@ -39,6 +62,7 @@ def get_llm(settings: Settings = Depends(get_settings)) -> BaseChatModel | None:
         settings.LLM_TEMPERATURE,
         settings.LLM_SEED,
         settings.LLM_TIMEOUT_SECONDS,
+        settings.LLM_MAX_OUTPUT_TOKENS,
         settings.OPENAI_API_KEY.get_secret_value(),
     )
 

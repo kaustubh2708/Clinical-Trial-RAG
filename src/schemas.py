@@ -2,8 +2,9 @@
 
 from datetime import UTC, datetime
 from enum import StrEnum
+from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, field_validator
 
 from src.config import get_settings
 
@@ -84,6 +85,7 @@ class AuditInfo(BaseModel):
     """Everything needed to explain or replay an answer."""
 
     model: str
+    llm_provider: str | None = None
     prompt_version: str
     retrieval_mode: str | None = None
     retrieved_chunk_ids: list[str]
@@ -144,28 +146,34 @@ class ProtocolSummary(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+# Every field is length-bounded. With constrained decoding (Ollama, OpenAI JSON schema) the bounds become part of
+# the grammar, so a model cannot loop inside a string or list; output beyond them fails validation (fail closed).
+ShortText = Annotated[str, StringConstraints(max_length=300)]
+
+
 class EvidenceItem(BaseModel):
-    chunk_id: str = Field(..., description="ID of the protocol chunk the quote comes from.")
-    quote: str = Field(..., description="Exact text copied verbatim from that chunk.")
-    explanation: str = Field(..., description="How this quote bears on the question.")
+    chunk_id: str = Field(..., max_length=64, description="ID of the protocol chunk the quote comes from.")
+    quote: str = Field(..., max_length=400, description="Short exact span copied verbatim from that chunk.")
+    explanation: str = Field(..., max_length=400, description="How this quote bears on the question.")
 
 
 class LLMAssessment(BaseModel):
     status: EligibilityStatus
-    evidence: list[EvidenceItem]
-    safety_concerns: list[str]
-    rationale: str
+    evidence: list[EvidenceItem] = Field(..., max_length=6)
+    safety_concerns: list[ShortText] = Field(..., max_length=8)
+    rationale: str = Field(..., max_length=1500)
 
 
 class LLMCriterionVerdict(BaseModel):
-    criterion_id: str = Field(..., description="The id attribute of the criterion being judged.")
+    criterion_id: str = Field(..., max_length=64, description="The id attribute of the criterion being judged.")
     verdict: CriterionVerdictValue
     patient_evidence: str = Field(
         ...,
+        max_length=300,
         description="Exact text copied from the patient summary that supports the verdict; empty if none.",
     )
-    rationale: str
+    rationale: str = Field(..., max_length=500)
 
 
 class LLMScreeningAssessment(BaseModel):
-    verdicts: list[LLMCriterionVerdict]
+    verdicts: list[LLMCriterionVerdict] = Field(..., max_length=200)

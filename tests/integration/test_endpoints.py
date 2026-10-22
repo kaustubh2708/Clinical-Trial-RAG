@@ -100,7 +100,7 @@ def test_no_cross_trial_contamination(client, fake_llm, vector_store):
             body = client.post(QUERY_URL, json={"query": query, "protocol_id": protocol_id, "top_k": 10}).json()
             assert all(c["protocol_id"] == protocol_id for c in body["citations"])
             assert set(body["audit"]["retrieved_chunk_ids"]) <= own_ids
-            assert f"[{other} |" not in fake_llm.prompts[-1]
+            assert f'protocol_id="{other}"' not in fake_llm.prompts[-1]
 
 
 def test_query_without_llm_returns_503(client):

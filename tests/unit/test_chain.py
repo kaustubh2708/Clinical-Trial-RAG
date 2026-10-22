@@ -215,3 +215,58 @@ def test_off_topic_query_still_abstains_in_hybrid_mode(indexed, make_chain, fake
 def test_dense_mode_matches_previous_behaviour(indexed, make_chain, fake_llm):
     response = make_chain(fake_llm, RETRIEVAL_MODE="dense").query(_request(top_k=3))
     assert len(response.audit.retrieved_chunk_ids) == 3 and response.audit.retrieval_mode == "dense"
+
+
+def test_llm_never_sees_the_embedding_prefix(indexed, make_chain, fake_llm):
+    make_chain(fake_llm).query(_request())
+    prompt = fake_llm.prompts[-1]
+    assert f"[{T2D_ID} |" not in prompt  # prefix is for embeddings only
+    assert ' section="' in prompt and ' type="' in prompt  # the same facts arrive as tag attributes
+
+
+def test_prompts_render_with_literal_json_braces():
+    from src.rag.prompt_templates import QA_PROMPT, SCREENING_PROMPT
+
+    qa = QA_PROMPT.format_messages(protocol_id=T2D_ID, context="c", query="q")[0].content
+    screen = SCREENING_PROMPT.format_messages(protocol_id=T2D_ID, criteria="c", patient_summary="p")[0].content
+    assert '{"chunk_id"' in qa and '{"verdicts"' in screen
+
+
+def test_screening_uses_short_labels_and_maps_them_back(indexed, make_chain):
+    llm = FakeStructuredLLM(screening_rules={"eGFR": (MET, "eGFR 24 mL/min/1.73m2")})
+    response = make_chain(llm).screen(PatientScreeningRequest(protocol_id=T2D_ID, patient_summary=PATIENT))
+    prompt = llm.prompts[-1]
+    assert '<criterion id="I1" type="inclusion">' in prompt and '<criterion id="E9" type="exclusion">' in prompt
+    assert all(c.chunk_id not in prompt for c in response.criteria)  # hashes never shown to the model
+    egfr = next(c for c in response.criteria if "eGFR" in c.criterion_text)
+    assert egfr.verdict is MET and response.failing_criteria == [egfr.chunk_id]
+
+
+def test_screening_downgrades_unrelated_evidence(indexed, make_chain):
+    summary = PATIENT + " No history of pancreatitis."
+    llm = FakeStructuredLLM(screening_rules={"Pregnant": (NOT_MET, "No history of pancreatitis")})
+    response = make_chain(llm).screen(PatientScreeningRequest(protocol_id=T2D_ID, patient_summary=summary))
+    pregnancy = next(c for c in response.criteria if "Pregnant" in c.criterion_text)
+    assert pregnancy.verdict is UNKNOWN and "does not mention this criterion" in pregnancy.rationale
+
+
+def test_short_patient_facts_count_as_evidence(indexed, make_chain):
+    llm = FakeStructuredLLM(screening_rules={"Body mass index": (MET, "BMI 31")})
+    response = make_chain(llm).screen(PatientScreeningRequest(protocol_id=T2D_ID, patient_summary=PATIENT))
+    bmi = next(c for c in response.criteria if "Body mass index" in c.criterion_text)
+    assert bmi.verdict is MET and bmi.evidence_verified is True
+
+
+def test_query_never_confirms_eligibility(indexed, make_chain):
+    def eligible(chunks):
+        return LLMAssessment(
+            status=EligibilityStatus.ELIGIBLE,
+            evidence=[EvidenceItem(chunk_id=chunks[0][0], quote=chunks[0][1][:60], explanation="x")],
+            safety_concerns=[],
+            rationale="Looks fine.",
+        )
+
+    response = make_chain(FakeStructuredLLM(qa_responder=eligible)).query(_request())
+    assert response.status is EligibilityStatus.INDETERMINATE
+    assert response.is_grounded is True  # the quote was real; the conclusion is what cannot be trusted
+    assert any("/protocols/screen" in concern for concern in response.safety_concerns)

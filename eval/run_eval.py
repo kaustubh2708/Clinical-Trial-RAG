@@ -1,9 +1,10 @@
-"""Evaluate retrieval (offline) and, if OPENAI_API_KEY is set, end-to-end answers.
+"""Evaluate retrieval (offline) and, optionally, end-to-end answers with a real LLM.
 
 Usage:
     python -m eval.run_eval                          # dense vs hybrid retrieval, gate sweep
     python -m eval.run_eval --min-hit-rate 0.95      # exit 1 if the configured mode falls below (CI)
     OPENAI_API_KEY=sk-... python -m eval.run_eval --with-llm
+    LLM_PROVIDER=ollama LLM_MODEL_NAME=qwen2.5:7b python -m eval.run_eval --with-llm --limit 10
 """
 
 import argparse
@@ -137,26 +138,29 @@ def llm_report(settings: Settings, cases: list[dict], top_k: int) -> list[str]:
 
     llm = get_llm(settings)
     if llm is None:
-        return ["## End-to-end (LLM)", "", "Skipped: OPENAI_API_KEY is not set."]
+        return ["## End-to-end (LLM)", "", "Skipped: no LLM configured (set OPENAI_API_KEY or LLM_PROVIDER=ollama)."]
     chain = build_chain(settings, llm)
-    correct, labelled, quotes, verified, grounded = 0, 0, 0, 0, 0
+    correct, labelled, quotes, verified, grounded, unsafe = 0, 0, 0, 0, 0, 0
     rows = []
     for case in cases:
         response = chain.query(EligibilityQueryRequest(query=case["question"], protocol_id=case["protocol_id"], top_k=top_k))
         if case.get("expected_status"):
             labelled += 1
             correct += response.status.value == case["expected_status"]
+            # The dangerous error: telling a coordinator a patient may enrol when a criterion rules them out.
+            unsafe += response.status.value == "ELIGIBLE" and case["expected_status"] == "NOT_ELIGIBLE"
         quotes += len(response.citations)
         verified += sum(c.quote_verified for c in response.citations)
         grounded += response.is_grounded
         rows.append(f"| {case['id']} | {case.get('expected_status', '-')} | {response.status.value} | {response.is_grounded} |")
     return [
-        f"## End-to-end (LLM: {settings.LLM_MODEL_NAME}, mode={settings.RETRIEVAL_MODE}, "
+        f"## End-to-end (LLM: {settings.LLM_PROVIDER}/{settings.LLM_MODEL_NAME}, mode={settings.RETRIEVAL_MODE}, "
         f"MIN_RELEVANCE_SCORE={settings.MIN_RELEVANCE_SCORE})",
         "",
         "| Metric | Value |",
         "| --- | --- |",
         f"| Status accuracy | {correct / max(1, labelled):.2f} ({correct}/{labelled}) |",
+        f"| Unsafe answers (ELIGIBLE when NOT_ELIGIBLE expected) | {unsafe} |",
         f"| Citation verification rate | {verified / max(1, quotes):.2f} ({verified}/{quotes}) |",
         f"| Grounded rate | {grounded / len(cases):.2f} |",
         "",
@@ -170,7 +174,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--top-k", type=int, default=Settings().RETRIEVAL_TOP_K)
     parser.add_argument("--thresholds", type=float, nargs="+", default=[0.15, 0.25, 0.30, 0.35, 0.45])
-    parser.add_argument("--with-llm", action="store_true", help="Also run end-to-end answers (needs OPENAI_API_KEY).")
+    parser.add_argument("--with-llm", action="store_true",
+                        help="Also run end-to-end answers (OPENAI_API_KEY, or LLM_PROVIDER=ollama).")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="With --with-llm: only the first N cases (local models are slow).")
     parser.add_argument("--min-hit-rate", type=float, default=None,
                         help="Exit with status 1 if the configured RETRIEVAL_MODE's hit rate is below this.")
     parser.add_argument("--output", type=Path, default=ROOT / "eval" / "results.md")
@@ -186,7 +193,7 @@ def main() -> None:
         lines = ["# Evaluation results", "", *retrieval_report(by_mode, args.thresholds, args.top_k)]
         if args.with_llm:
             llm_settings = base.model_copy(update={"CHROMA_COLLECTION_NAME": "eval_llm"})
-            lines += ["", *llm_report(llm_settings, cases, args.top_k)]
+            lines += ["", *llm_report(llm_settings, cases[: args.limit], args.top_k)]
 
     args.output.write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
