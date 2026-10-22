@@ -1,0 +1,39 @@
+SYNTHETIC PROTOCOL FOR DEMONSTRATION ONLY. NOT A REAL STUDY.
+
+## 1. Study Overview
+Protocol ID: NCT90000001
+Title: A Phase 3, Randomized, Double-Blind, Placebo-Controlled Study of GLX-201 Once Weekly in Adults with Type 2 Diabetes Inadequately Controlled on Metformin.
+Sponsor: Example Pharma Ltd (fictional).
+Primary objective: To evaluate the change in HbA1c from baseline to Week 26 with GLX-201 compared with placebo.
+
+## 2. Study Design
+Approximately 600 participants will be randomized 1:1 to GLX-201 2 mg subcutaneous injection once weekly or matching placebo, in addition to a stable dose of metformin. The treatment period is 26 weeks, followed by a 4-week safety follow-up.
+
+## 3. Eligibility Criteria
+
+Inclusion Criteria:
+1. Adults aged 18 to 75 years (inclusive) at the time of signing informed consent.
+2. Diagnosis of type 2 diabetes mellitus for at least 6 months before screening.
+3. HbA1c between 7.0% and 10.5% (inclusive) at screening.
+4. On a stable dose of metformin of at least 1500 mg/day for at least 90 days before screening.
+5. Body mass index (BMI) between 25.0 and 45.0 kg/m2 (inclusive).
+6. Women of childbearing potential must use a highly effective method of contraception
+   during the study and for 30 days after the last dose.
+7. Able and willing to provide written informed consent.
+
+Exclusion Criteria:
+1. Type 1 diabetes mellitus or a history of diabetic ketoacidosis.
+2. Estimated glomerular filtration rate (eGFR) below 30 mL/min/1.73m2 at screening.
+3. History of acute or chronic pancreatitis.
+4. Personal or family history of medullary thyroid carcinoma or Multiple Endocrine Neoplasia syndrome type 2 (MEN2).
+5. Use of any GLP-1 receptor agonist, insulin, or SGLT2 inhibitor within 90 days before screening.
+6. Myocardial infarction, stroke, or hospitalization for heart failure within 6 months before screening.
+7. ALT or AST greater than 3 times the upper limit of normal (ULN) at screening.
+8. Pregnant or breastfeeding, or planning to become pregnant during the study.
+9. Proliferative diabetic retinopathy or maculopathy requiring acute treatment.
+
+## 4. Study Treatment
+GLX-201 2 mg or placebo is administered by subcutaneous injection once weekly. Doses missed by more than 4 days should be skipped. Metformin dose must remain unchanged throughout the study.
+
+## 5. Safety Monitoring
+Hypoglycemia events, gastrointestinal adverse events, and injection site reactions will be recorded at every visit. Serum calcitonin will be measured at screening and Week 26. Participants who develop persistent severe abdominal pain must stop study drug and be evaluated for pancreatitis.

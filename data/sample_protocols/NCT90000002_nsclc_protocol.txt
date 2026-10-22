@@ -1,0 +1,38 @@
+SYNTHETIC PROTOCOL FOR DEMONSTRATION ONLY. NOT A REAL STUDY.
+
+## 1. Study Overview
+Protocol ID: NCT90000002
+Title: A Phase 2, Open-Label Study of ONX-77 in Combination with Pembrolizumab in Previously Treated Advanced Non-Small Cell Lung Cancer (NSCLC).
+Sponsor: Example Oncology Inc (fictional).
+Primary objective: Objective response rate (ORR) per RECIST v1.1.
+
+## 2. Study Design
+Approximately 120 participants will receive ONX-77 400 mg orally once daily plus pembrolizumab 200 mg intravenously every 3 weeks until disease progression or unacceptable toxicity.
+
+## 3. Eligibility Criteria
+
+Inclusion Criteria:
+- Age 18 years or older.
+- Histologically or cytologically confirmed stage IIIB or IV non-small cell lung cancer.
+- Disease progression on or after one prior platinum-based chemotherapy regimen.
+- ECOG performance status of 0 or 1.
+- At least one measurable lesion per RECIST v1.1.
+- Adequate organ function, defined as:
+  a. Absolute neutrophil count of at least 1.5 x 10^9/L
+  b. Platelets of at least 100 x 10^9/L
+  c. Creatinine clearance of at least 50 mL/min
+
+Exclusion Criteria:
+- Known EGFR mutation or ALK rearrangement.
+- Untreated or symptomatic central nervous system (CNS) metastases.
+- Prior treatment with any anti-PD-1, anti-PD-L1, or anti-CTLA-4 antibody.
+- Active autoimmune disease requiring systemic treatment within the past 2 years.
+- History of interstitial lung disease or (non-infectious) pneumonitis requiring steroids.
+- QTc interval greater than 470 ms on screening ECG.
+- Receipt of chemotherapy or radiotherapy within 4 weeks before the first dose.
+
+## 4. Study Treatment
+ONX-77 is taken orally once daily with food. Strong CYP3A4 inhibitors must be avoided during treatment with ONX-77.
+
+## 5. Safety Monitoring
+Immune-related adverse events will be graded using CTCAE v5.0. Participants with grade 3 or higher pneumonitis must permanently discontinue both study drugs.

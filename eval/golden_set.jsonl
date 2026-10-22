@@ -1,0 +1,25 @@
+{"id": "t2d-age", "protocol_id": "NCT90000001", "kind": "lookup", "question": "What is the age range for participants?", "expected_keywords": ["aged 18 to 75"], "expected_status": "INDETERMINATE"}
+{"id": "t2d-hba1c", "protocol_id": "NCT90000001", "kind": "lookup", "question": "What HbA1c values are required at screening?", "expected_keywords": ["HbA1c between 7.0%"], "expected_status": "INDETERMINATE"}
+{"id": "t2d-egfr", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Can a patient with an eGFR of 25 enroll?", "expected_keywords": ["eGFR) below 30"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "t2d-kidney", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Are there kidney function requirements?", "expected_keywords": ["glomerular filtration"]}
+{"id": "t2d-pancreatitis", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Is a history of pancreatitis exclusionary?", "expected_keywords": ["acute or chronic pancreatitis"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "t2d-thyroid", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Patient's mother had medullary thyroid cancer. Eligible?", "expected_keywords": ["medullary thyroid carcinoma"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "t2d-glp1", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Patient stopped semaglutide (a GLP-1 receptor agonist) 30 days ago. Can they join?", "expected_keywords": ["GLP-1 receptor agonist"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "t2d-metformin", "protocol_id": "NCT90000001", "kind": "lookup", "question": "What metformin dose is required before screening?", "expected_keywords": ["1500 mg/day"], "expected_status": "INDETERMINATE"}
+{"id": "t2d-liver", "protocol_id": "NCT90000001", "kind": "lookup", "question": "What liver enzyme limits apply?", "expected_keywords": ["ALT or AST"]}
+{"id": "t2d-pregnancy", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Can a breastfeeding woman participate?", "expected_keywords": ["breastfeeding"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "t2d-bmi", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Is there a BMI limit?", "expected_keywords": ["Body mass index"]}
+{"id": "t2d-heart", "protocol_id": "NCT90000001", "kind": "lookup", "question": "Patient had a heart attack 3 months ago. Are they excluded?", "expected_keywords": ["Myocardial infarction"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "nsclc-ecog", "protocol_id": "NCT90000002", "kind": "lookup", "question": "What ECOG performance status is allowed?", "expected_keywords": ["ECOG performance status of 0 or 1"]}
+{"id": "nsclc-egfr-mut", "protocol_id": "NCT90000002", "kind": "lookup", "question": "Are patients with an EGFR mutation eligible?", "expected_keywords": ["EGFR mutation"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "nsclc-pd1", "protocol_id": "NCT90000002", "kind": "lookup", "question": "Patient previously received nivolumab, an anti-PD-1 antibody. Eligible?", "expected_keywords": ["anti-PD-1"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "nsclc-cns", "protocol_id": "NCT90000002", "kind": "lookup", "question": "Are brain metastases allowed?", "expected_keywords": ["central nervous system"]}
+{"id": "nsclc-qtc", "protocol_id": "NCT90000002", "kind": "lookup", "question": "What is the QTc limit on ECG?", "expected_keywords": ["QTc interval greater than 470"]}
+{"id": "nsclc-organ", "protocol_id": "NCT90000002", "kind": "lookup", "question": "What platelet count is required?", "expected_keywords": ["Platelets of at least"]}
+{"id": "nsclc-chemo", "protocol_id": "NCT90000002", "kind": "lookup", "question": "Patient finished radiotherapy 2 weeks ago. Can they start?", "expected_keywords": ["radiotherapy within 4 weeks"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "nsclc-autoimmune", "protocol_id": "NCT90000002", "kind": "lookup", "question": "Is active autoimmune disease an exclusion?", "expected_keywords": ["autoimmune disease"], "expected_status": "NOT_ELIGIBLE"}
+{"id": "abstain-parking", "protocol_id": "NCT90000001", "kind": "abstain", "question": "Where should visitors park their cars at the hospital?", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
+{"id": "abstain-payment", "protocol_id": "NCT90000001", "kind": "abstain", "question": "How much will participants be paid per visit?", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
+{"id": "abstain-weather", "protocol_id": "NCT90000002", "kind": "abstain", "question": "What will the weather be like next Tuesday?", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
+{"id": "abstain-recipe", "protocol_id": "NCT90000002", "kind": "abstain", "question": "Give me a recipe for chocolate chip cookies.", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
+{"id": "abstain-tattoo", "protocol_id": "NCT90000001", "kind": "abstain", "question": "Are participants allowed to get tattoos during the study?", "expected_keywords": [], "expected_status": "CRITERIA_NOT_SPECIFIED"}
